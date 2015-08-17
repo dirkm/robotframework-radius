@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+from setuptools import setup
+
+
+setup(name='robotframework-radius',
+      version='0.1.0',
+      description='Robotframework RADIUS client library',
+      author='Michael van Slingerland',
+      author_email='michael@deviousops.nl',
+      url='https://github.com/deviousops/robotframework-radius',
+      modules=['RadiusClientLibrary'],
+      install_requires=[
+        "robotframework",
+        "pyrad",
+    ],
+
+     )
