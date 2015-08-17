@@ -1,2 +1,5 @@
 robotframework_radius.egg-info
 *.pyc
+build
+dist
+venv
