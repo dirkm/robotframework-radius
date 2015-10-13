@@ -9,7 +9,7 @@ class RadiusClientLibrary(object):
         self.attributes = []
         self.secret = str(secret)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.settimeout(1.5)
+        self.sock.settimeout(3.0)
         self.sock.setblocking(0)
 
     def add_attribute(self,name,value):
@@ -32,15 +32,20 @@ class RadiusClientLibrary(object):
 
     def receive_access_accept(self):
         ready = select.select([self.sock], [], [], 1)
+        p = None
         if ready[0]:
             data, addr = self.sock.recvfrom(1024)
             p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary("dictionary"))
             
             if p.code != packet.AccessAccept:
-                raise Exception("Did not receive Access Accept")
-        self.response = p
+                raise Exception("received {}",format(p.code))
+        if not p:
+          raise Exception("Did not receive any answer")
+        else:
+          self.response = p
 
     def response_attribute_equals(self,k,v):
+        print self.response
         if type(k) == unicode:
           k = str(k)
         if type(v) == unicode:
@@ -57,12 +62,14 @@ class RadiusClientLibrary(object):
 
     def receive_access_reject(self):
         ready = select.select([self.sock], [], [], 1)
+        p = None
         if ready[0]:
             data, addr = self.sock.recvfrom(1024)
             p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary("dictionary"))
             
             if p.code != packet.AccessReject:
                 raise Exception("Did not receive Access Reject")
+        print p
         self.response = p
 
     def send_accounting_request(self):
