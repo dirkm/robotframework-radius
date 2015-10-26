@@ -31,7 +31,7 @@ class RadiusClientLibrary(object):
         self.sock.sendto(raw,self.addr)
 
     def receive_access_accept(self):
-        ready = select.select([self.sock], [], [], 1)
+        ready = select.select([self.sock], [], [], 5)
         p = None
         if ready[0]:
             data, addr = self.sock.recvfrom(1024)
@@ -44,8 +44,9 @@ class RadiusClientLibrary(object):
         else:
           self.response = p
 
+    def response_attribute_count(self):
+        return len(self.response)
     def response_attribute_equals(self,k,v):
-        print self.response
         if type(k) == unicode:
           k = str(k)
         if type(v) == unicode:
@@ -61,7 +62,7 @@ class RadiusClientLibrary(object):
             raise Exception('{0} not in  {1}'.format(self.response[k], v))
 
     def receive_access_reject(self):
-        ready = select.select([self.sock], [], [], 1)
+        ready = select.select([self.sock], [], [], 5)
         p = None
         if ready[0]:
             data, addr = self.sock.recvfrom(1024)
@@ -82,7 +83,17 @@ class RadiusClientLibrary(object):
        
         self.sock.sendto(raw,self.addr)
 
-if __name__ == '__main__':
-  r = RadiusClientLibrary('172.17.0.1',1813,'bras1001')
-  r.add_attribute('User-Name','mike')
-  r.send_accounting_request()
+    def receive_accounting_response(self):
+        ready = select.select([self.sock], [], [], 1)
+        p = None
+        while True:
+            if ready[0]:
+                data, addr = self.sock.recvfrom(1024)
+                p = packet.AcctPacket(secret=self.secret,packet=data,dict=dictionary.Dictionary("dictionary"))
+                break
+        if p.code != packet.AccountingResponse:
+            raise Exception("received {}",format(p.code))
+        elif  p == None:
+            raise Exception("Did not receive any answer")
+        print p
+        self.response = p
