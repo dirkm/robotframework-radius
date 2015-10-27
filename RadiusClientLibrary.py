@@ -18,7 +18,7 @@ class RadiusClientLibrary(object):
         self.attributes.append((name,value))
 
     def send_access_request(self):
-        p = packet.AuthPacket(code=1, secret=six.b(self.secret), id=124,dict=dictionary.Dictionary("dictionary"))
+        p = packet.AuthPacket(code=1, secret=six.b(self.secret), id=124,dict=dictionary.Dictionary("dict/dictionary"))
         
         for attr in self.attributes:
             if attr[0] == 'User-Password':
@@ -35,7 +35,7 @@ class RadiusClientLibrary(object):
         p = None
         if ready[0]:
             data, addr = self.sock.recvfrom(1024)
-            p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary("dictionary"))
+            p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary("dict/dictionary"))
             
             if p.code != packet.AccessAccept:
                 raise Exception("received {}",format(p.code))
@@ -66,7 +66,7 @@ class RadiusClientLibrary(object):
         p = None
         if ready[0]:
             data, addr = self.sock.recvfrom(1024)
-            p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary("dictionary"))
+            p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary("dict/dictionary"))
             
             if p.code != packet.AccessReject:
                 raise Exception("Did not receive Access Reject")
@@ -74,7 +74,7 @@ class RadiusClientLibrary(object):
         self.response = p
 
     def send_accounting_request(self):
-        p = packet.AcctPacket(secret=self.secret, id=124,dict=dictionary.Dictionary("dictionary"))
+        p = packet.AcctPacket(secret=self.secret, id=124,dict=dictionary.Dictionary("dict/dictionary"))
         print self.attributes
         for attr in self.attributes:
             p[attr[0]] = attr[1]
@@ -89,7 +89,7 @@ class RadiusClientLibrary(object):
         while True:
             if ready[0]:
                 data, addr = self.sock.recvfrom(1024)
-                p = packet.AcctPacket(secret=self.secret,packet=data,dict=dictionary.Dictionary("dictionary"))
+                p = packet.AcctPacket(secret=self.secret,packet=data,dict=dictionary.Dictionary("dict/dictionary"))
                 break
         if p.code != packet.AccountingResponse:
             raise Exception("received {}",format(p.code))
