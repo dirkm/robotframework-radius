@@ -74,7 +74,7 @@ class RadiusClientLibrary(object):
         self.response = p
 
     def send_accounting_request(self):
-        p = packet.AcctPacket(secret=self.secret, id=124,dict=dictionary.Dictionary("dictionary.rfc2865"))
+        p = packet.AcctPacket(secret=self.secret, id=124,dict=dictionary.Dictionary("dictionary"))
         print self.attributes
         for attr in self.attributes:
             p[attr[0]] = attr[1]
