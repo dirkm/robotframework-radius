@@ -8,7 +8,7 @@ from robot.libraries.BuiltIn import BuiltIn
 class RadiusClientLibrary(object):
     def __init__(self,addr,port,secret,dictionary='dictionary'):
         self._cache = robot.utils.ConnectionCache('No Sessions Created')
-        self.builtin = Builtin()
+        self.builtin = BuiltIn()
         self.addr = (addr, int(port))
         self.attributes = []
         self.secret = str(secret)
