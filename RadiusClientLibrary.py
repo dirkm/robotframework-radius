@@ -2,9 +2,12 @@ from pyrad import packet,dictionary
 import socket
 import six
 import select
+import robot
 
 class RadiusClientLibrary(object):
     def __init__(self,addr,port,secret,dictionary='dictionary'):
+        self._cache = robot.utils.ConnectionCache('No Sessions Created')
+        self.builtin = Buitlin()
         self.addr = (addr, int(port))
         self.attributes = []
         self.secret = str(secret)
@@ -14,6 +17,18 @@ class RadiusClientLibrary(object):
         self.sock.settimeout(3.0)
         self.sock.setblocking(0)
 
+    def create_session(self, alias, address, port, secret, dictionary='dictionary'):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind(('0.0.0.0',0))
+        sock.settimeout(3.0)
+        sock.setblocking(0)
+        session= { 'sock': sock,
+                   'address': address,
+                   'port': port,
+                   'secret': secret,
+                   'dictionary': dictionary}
+        self._cache.register(session, alias=alias)
+        return sock
     def add_attribute(self,name,value):
         if type(name) == unicode:
             name = str(name)
@@ -41,7 +56,7 @@ class RadiusClientLibrary(object):
             
             if p.code != packet.AccessAccept:
                 raise Exception("received {}",format(p.code))
-        if not p:
+        if p == None:
           raise Exception("Did not receive any answer")
         else:
           self.response = p
