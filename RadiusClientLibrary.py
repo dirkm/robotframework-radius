@@ -4,10 +4,11 @@ import six
 import select
 
 class RadiusClientLibrary(object):
-    def __init__(self,addr,port,secret):
+    def __init__(self,addr,port,secret,dictionary='dictionary'):
         self.addr = (addr, int(port))
         self.attributes = []
         self.secret = str(secret)
+        self.dictionary = dictionary
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.settimeout(3.0)
         self.sock.setblocking(0)
@@ -18,7 +19,7 @@ class RadiusClientLibrary(object):
         self.attributes.append((name,value))
 
     def send_access_request(self):
-        p = packet.AuthPacket(code=1, secret=six.b(self.secret), id=124,dict=dictionary.Dictionary("dict/dictionary"))
+        p = packet.AuthPacket(code=1, secret=six.b(self.secret), id=124,dict=dictionary.Dictionary(self.dictionary))
         
         for attr in self.attributes:
             if attr[0] == 'User-Password':
@@ -35,7 +36,7 @@ class RadiusClientLibrary(object):
         p = None
         if ready[0]:
             data, addr = self.sock.recvfrom(1024)
-            p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary("dict/dictionary"))
+            p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary(self.dictionary))
             
             if p.code != packet.AccessAccept:
                 raise Exception("received {}",format(p.code))
@@ -66,7 +67,7 @@ class RadiusClientLibrary(object):
         p = None
         if ready[0]:
             data, addr = self.sock.recvfrom(1024)
-            p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary("dict/dictionary"))
+            p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary(self.dictionary))
             
             if p.code != packet.AccessReject:
                 raise Exception("Did not receive Access Reject")
@@ -74,7 +75,7 @@ class RadiusClientLibrary(object):
         self.response = p
 
     def send_accounting_request(self):
-        p = packet.AcctPacket(secret=self.secret, id=124,dict=dictionary.Dictionary("dict/dictionary"))
+        p = packet.AcctPacket(secret=self.secret, id=124,dict=dictionary.Dictionary(self.dictionary))
         print self.attributes
         for attr in self.attributes:
             p[attr[0]] = attr[1]
@@ -89,7 +90,7 @@ class RadiusClientLibrary(object):
         while True:
             if ready[0]:
                 data, addr = self.sock.recvfrom(1024)
-                p = packet.AcctPacket(secret=self.secret,packet=data,dict=dictionary.Dictionary("dict/dictionary"))
+                p = packet.AcctPacket(secret=self.secret,packet=data,dict=dictionary.Dictionary(self.dictionary))
                 break
         if p.code != packet.AccountingResponse:
             raise Exception("received {}",format(p.code))
