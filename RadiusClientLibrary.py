@@ -3,6 +3,7 @@ import socket
 import six
 import select
 import robot
+from robot.libraries.BuiltIn import BuiltIn
 
 class RadiusClientLibrary(object):
     def __init__(self,addr,port,secret,dictionary='dictionary'):
