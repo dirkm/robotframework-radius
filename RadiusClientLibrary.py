@@ -10,6 +10,7 @@ class RadiusClientLibrary(object):
         self.secret = str(secret)
         self.dictionary = dictionary
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(('0.0.0.0',0))
         self.sock.settimeout(3.0)
         self.sock.setblocking(0)
 
