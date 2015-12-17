@@ -33,9 +33,10 @@ class RadiusClientLibrary(object):
 
     def send_request(self, alias, code, attributes):
         session = self._cache.switch(alias)
-        p = packet.AuthPacket(code=code, secret=session['secret'], id=124,dict=dictionary.Dictionary(session['dictionary']))
+        p = packet.AuthPacket(code=int(code), secret=session['secret'], id=124,dict=dictionary.Dictionary(session['dictionary']))
         
         for attr in attributes:
+            self.builtin.log(attr)
             if attr[0] == 'User-Password':
                 p[attr[0]] = p.PwCrypt(attr[1])
             else:
