@@ -18,7 +18,7 @@ class RadiusClientLibrary(object):
         self.sock.settimeout(3.0)
         self.sock.setblocking(0)
 
-    def create_session(self, alias, address, port, self.secret, dictionary='dictionary'):
+    def create_session(self, alias, address, port, secret, dictionary='dictionary'):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(('0.0.0.0',0))
         sock.settimeout(3.0)
