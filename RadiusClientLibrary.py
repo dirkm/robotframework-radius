@@ -25,7 +25,7 @@ class RadiusClientLibrary(object):
 
     def send_request(self, alias, code, attributes):
         session = self._cache.switch(alias)
-        if code in [packet.AccessRequest]:
+        if int(code) in [packet.AccessRequest]:
           p = packet.AuthPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']))
         elif code in [packet.AccountingRequest]:
           p = packet.AcctPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']))
