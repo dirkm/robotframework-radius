@@ -12,7 +12,7 @@ class RadiusClientLibrary(object):
 
     def create_session(self, alias, address, port, secret, dictionary='dictionary'):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind(('0.0.0.0',0))
+        sock.bind(('',0))
         sock.settimeout(3.0)
         sock.setblocking(0)
         session= { 'sock': sock,
@@ -60,41 +60,14 @@ class RadiusClientLibrary(object):
           raise Exception("Did not receive any answer")
         else:
           self.response = p
-   
 
-    def receive_access_reject(self):
-        ready = select.select([self.sock], [], [], 5)
-        p = None
-        if ready[0]:
-            data, addr = self.sock.recvfrom(1024)
-            p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary(self.dictionary))
-            
-            if p.code != packet.AccessReject:
-                raise Exception("Did not receive Access Reject")
-        print p
-        self.response = p
-
-    def send_accounting_request(self):
-        p = packet.AcctPacket(secret=self.secret, dict=dictionary.Dictionary(self.dictionary))
-        print self.attributes
-        for attr in self.attributes:
-            p[attr[0]] = attr[1]
-        print p
-        raw = p.RequestPacket()
-       
-        self.sock.sendto(raw,self.addr)
-
-    def receive_accounting_response(self):
-        ready = select.select([self.sock], [], [], 1)
-        p = None
-        while True:
-            if ready[0]:
-                data, addr = self.sock.recvfrom(1024)
-                p = packet.AcctPacket(secret=self.secret,packet=data,dict=dictionary.Dictionary(self.dictionary))
-                break
-        if p.code != packet.AccountingResponse:
-            raise Exception("received {}",format(p.code))
-        elif  p == None:
-            raise Exception("Did not receive any answer")
-        print p
-        self.response = p
+    def create_server(self, alias, address, port, secret, dictionary='dictionary'):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind((address,port))
+        sock.settimeout(3.0)
+        sock.setblocking(0)
+        server= { 'sock': sock,
+                   'secret': six.b(str(secret)),
+                   'dictionary': dictionary}
+        self._cache.register(server, alias=alias)
+        return server
