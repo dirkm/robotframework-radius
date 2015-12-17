@@ -26,7 +26,7 @@ class RadiusClientLibrary(object):
         session= { 'sock': sock,
                    'address': address,
                    'port': port,
-                   'secret': six.b(secret),
+                   'secret': six.b(str(secret)),
                    'dictionary': dictionary}
         self._cache.register(session, alias=alias)
         return session
