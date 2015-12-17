@@ -18,7 +18,7 @@ class RadiusClientLibrary(object):
         self.sock.settimeout(3.0)
         self.sock.setblocking(0)
 
-    def create_session(self, alias, address, port, secret, dictionary='dictionary'):
+    def create_session(self, alias, address, port, six.b(self.secret), dictionary='dictionary'):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(('0.0.0.0',0))
         sock.settimeout(3.0)
@@ -29,11 +29,11 @@ class RadiusClientLibrary(object):
                    'secret': secret,
                    'dictionary': dictionary}
         self._cache.register(session, alias=alias)
-        return sock
+        return session
 
     def send_request(self, alias, code, attributes):
         session = self._cache.switch(alias)
-        p = packet.AuthPacket(code=code, secret=six.b(session['secret']), id=124,dict=dictionary.Dictionary(session['dictionary']))
+        p = packet.AuthPacket(code=code, secret=session['secret'], id=124,dict=dictionary.Dictionary(session['dictionary']))
         
         for attr in attributes:
             if attr[0] == 'User-Password':
