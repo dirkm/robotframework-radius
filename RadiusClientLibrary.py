@@ -33,8 +33,7 @@ class RadiusClientLibrary(object):
 
     def send_request(self, alias, code, attributes):
         session = self._cache.switch(alias)
-        p = packet.AuthPacket(code=int(code), secret=session['secret'], id=124,dict=dictionary.Dictionary(session['dictionary']))
-        
+        p = packet.AuthPacket(code=getattr(code,packet), secret=session['secret'], id=124,dict=dictionary.Dictionary(session['dictionary']))
         
         for (k,v) in attributes.items():
             if k == u'User-Password':
@@ -59,7 +58,7 @@ class RadiusClientLibrary(object):
             self.builtin.log(len(data))
             p = packet.Packet(secret=session['secret'],packet=data,dict=dictionary.Dictionary(session['dictionary']))
             
-            if p.code != code:
+            if p.code != getattr(code,packet):
                 raise Exception("received {}",format(p.code))
         if p == None:
           raise Exception("Did not receive any answer")
