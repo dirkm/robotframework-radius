@@ -53,7 +53,7 @@ class RadiusClientLibrary(object):
         code = int(code)
         p = None
         session = self._cache.switch(alias)
-        ready = select.select([self.sock], [], [], 5)
+        ready = select.select([session['sock']], [], [], 5)
         if ready[0]:
             data, addr = session['sock'].recvfrom(1024)
             self.builtin.log(len(data))
