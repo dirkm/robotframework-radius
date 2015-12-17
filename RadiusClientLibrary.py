@@ -36,7 +36,7 @@ class RadiusClientLibrary(object):
         p = packet.AuthPacket(code=int(code), secret=session['secret'], id=124,dict=dictionary.Dictionary(session['dictionary']))
         
         
-        for k,v in attributes:
+        for (k,v) in attributes.items():
             if k == u'User-Password':
                 p[str(k)] = p.PwCrypt(str(v))
             else:
