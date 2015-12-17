@@ -33,7 +33,7 @@ class RadiusClientLibrary(object):
 
     def send_request(self, alias, code, attributes):
         session = self._cache.switch(alias)
-        p = packet.AuthPacket(code=getattr(packet,code), secret=session['secret'], id=124,dict=dictionary.Dictionary(session['dictionary']))
+        p = packet.AuthPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']))
         
         for (k,v) in attributes.items():
             if k == u'User-Password':
@@ -70,7 +70,7 @@ class RadiusClientLibrary(object):
         self.attributes.append((name,value))
 
     def send_access_request(self):
-        p = packet.AuthPacket(code=1, secret=six.b(self.secret), id=124,dict=dictionary.Dictionary(self.dictionary))
+        p = packet.AuthPacket(code=1, secret=six.b(self.secret), dict=dictionary.Dictionary(self.dictionary))
         
         for attr in self.attributes:
             if attr[0] == 'User-Password':
@@ -126,7 +126,7 @@ class RadiusClientLibrary(object):
         self.response = p
 
     def send_accounting_request(self):
-        p = packet.AcctPacket(secret=self.secret, id=124,dict=dictionary.Dictionary(self.dictionary))
+        p = packet.AcctPacket(secret=self.secret, dict=dictionary.Dictionary(self.dictionary))
         print self.attributes
         for attr in self.attributes:
             p[attr[0]] = attr[1]
