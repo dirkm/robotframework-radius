@@ -30,6 +30,21 @@ class RadiusClientLibrary(object):
                    'dictionary': dictionary}
         self._cache.register(session, alias=alias)
         return sock
+
+    def send_request(self, alias, code, attributes):
+        session = self._cache.switch(alias)
+        p = packet.AuthPacket(code=code, secret=six.b(session['secret']), id=124,dict=dictionary.Dictionary(session['dictionary']))
+        
+        for attr in attributes:
+            if attr[0] == 'User-Password':
+                p[attr[0]] = p.PwCrypt(attr[1])
+            else:
+                p[attr[0]] = attr[1]
+
+        raw = p.RequestPacket()
+       
+        session.sock.sendto(raw,self.addr)
+        
     def add_attribute(self,name,value):
         if type(name) == unicode:
             name = str(name)
