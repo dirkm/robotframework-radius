@@ -49,7 +49,6 @@ class RadiusClientLibrary(object):
         session['sock'].sendto(raw,self.addr)
         
     def receive_response(self, alias, code):
-        code = int(code)
         p = None
         session = self._cache.switch(alias)
         ready = select.select([session['sock']], [], [], 5)
