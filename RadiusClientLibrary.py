@@ -43,7 +43,7 @@ class RadiusClientLibrary(object):
 
         raw = p.RequestPacket()
        
-        session['sock'].sendto(raw,self.addr)
+        session['sock'].sendto(raw,(session['address'],session['port']))
         
     def receive_response(self, alias, code):
         p = None
