@@ -47,7 +47,7 @@ class RadiusClientLibrary(object):
 
         raw = p.RequestPacket()
        
-        session.sock.sendto(raw,self.addr)
+        session['sock'].sendto(raw,self.addr)
         
    
     def add_attribute(self,name,value):
