@@ -67,8 +67,6 @@ class RadiusClientLibrary(object):
       
           self.builtin.log(unicode_attr.keys())
 
-          return unicode_attr
-
     def create_server(self, alias, address, port, secret, dictionary='dictionary'):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((address,port))
@@ -79,3 +77,21 @@ class RadiusClientLibrary(object):
                    'dictionary': dictionary}
         self._cache.register(server, alias=alias)
         return server
+
+    def receive_response(self, alias, code):
+        p = None
+        session = self._cache.switch(alias)
+        ready = select.select([session['sock']], [], [], 5)
+        if ready[0]:
+            data, addr = session['sock'].recvfrom(1024)
+            p = packet.Packet(secret=session['secret'],packet=data,dict=dictionary.Dictionary(session['dictionary']))
+            
+            if p.code != getattr(packet,code):
+                raise Exception("received {}",format(p.code))
+        if p == None:
+          raise Exception("Did not receive any answer")
+        else:
+          self.builtin.log(p.keys())
+          unicode_attr = { unicode(k): p[k]  for k in p.keys() if type(k) == str}
+      
+          self.builtin.log(unicode_attr.keys())
