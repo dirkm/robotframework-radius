@@ -61,7 +61,7 @@ class RadiusClientLibrary(object):
         if p == None:
           raise Exception("Did not receive any answer")
         else:
-          self.builtin.log(p.items())
+          self.builtin.log(p.keys())
           p = { k.decode('utf8'):v for k,v in p.items() if type(k) == str}
           return p
 
