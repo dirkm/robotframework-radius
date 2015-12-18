@@ -26,6 +26,7 @@ class RadiusClientLibrary(object):
 
     def send_request(self, alias, code, attributes):
         session = self._cache.switch(alias)
+        authenticator = None
         if session['authenticator']:
             authenticator = packet.Packet.CreateAuthenticator()
         
