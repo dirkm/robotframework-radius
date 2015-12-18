@@ -39,6 +39,7 @@ class RadiusClientLibrary(object):
             if k == u'User-Password':
                 p[str(k)] = p.PwCrypt(str(v))
             else:
+                self.builtin.log(k)
                 if type(k) == unicode:
                   p[str(k)] = v
                 else:
