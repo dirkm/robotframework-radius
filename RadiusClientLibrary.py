@@ -78,7 +78,7 @@ class RadiusClientLibrary(object):
         self._cache.register(server, alias=alias)
         return server
 
-    def receive_response(self, alias, code):
+    def receive_request(self, alias, code):
         p = None
         session = self._cache.switch(alias)
         ready = select.select([session['sock']], [], [], 5)
