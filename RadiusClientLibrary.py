@@ -25,12 +25,12 @@ class RadiusClientLibrary(object):
 
     def send_request(self, alias, code, attributes):
         session = self._cache.switch(alias)
-
+        authenticator = packet.Packet.CreateAuthenticator()
         
         if getattr(packet,code) in [packet.AccessRequest]:
-          p = packet.AuthPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']))
+          p = packet.AuthPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']), authenticator=authenticator)
         elif getattr(packet,code) in [packet.AccountingRequest]:
-          p = packet.AcctPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']))
+          p = packet.AcctPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']), authenticator=authenticator)
 
         for (k,v) in attributes.items():
             if k == u'User-Password':
@@ -41,7 +41,6 @@ class RadiusClientLibrary(object):
                 else:
                   p[k] = v
 
-        p['Message-Authenticator'] =  p.CreateAuthenticator()
         raw = p.RequestPacket()
        
         session['sock'].sendto(raw,(session['address'],session['port']))
