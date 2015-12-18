@@ -10,7 +10,7 @@ class RadiusClientLibrary(object):
         self._cache = robot.utils.ConnectionCache('No Sessions Created')
         self.builtin = BuiltIn()
 
-    def create_session(self, alias, address, port, secret, dictionary='dictionary'):
+    def create_session(self, alias, address, port, secret, dictionary='dictionary',authenticator=True):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(('',0))
         sock.settimeout(3.0)
@@ -19,13 +19,15 @@ class RadiusClientLibrary(object):
                    'address': address,
                    'port': int(port),
                    'secret': six.b(str(secret)),
-                   'dictionary': dictionary}
+                   'dictionary': dictionary,
+                   'authenticator': True }
         self._cache.register(session, alias=alias)
         return session
 
     def send_request(self, alias, code, attributes):
         session = self._cache.switch(alias)
-        authenticator = packet.Packet.CreateAuthenticator()
+        if session['authenticator']:
+            authenticator = packet.Packet.CreateAuthenticator()
         
         if getattr(packet,code) in [packet.AccessRequest]:
           p = packet.AuthPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']), authenticator=authenticator)
