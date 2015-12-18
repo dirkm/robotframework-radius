@@ -61,12 +61,12 @@ class RadiusClientLibrary(object):
         if p == None:
           raise Exception("Did not receive any answer")
         else:
-          self.builtin.log(p.keys())
-          unicode_dict = { unicode(k): p[k]  for k in p.keys() if type(k) == str}
+          #self.builtin.log(p.keys())
+          #unicode_dict = { unicode(k): p[k]  for k in p.keys() if type(k) == str}
       
-          self.builtin.log(unicode_dict.keys())
+          #self.builtin.log(unicode_dict.keys())
 
-          return unicode_dict
+          return p
 
     def create_server(self, alias, address, port, secret, dictionary='dictionary'):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
