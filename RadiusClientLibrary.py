@@ -61,8 +61,6 @@ class RadiusClientLibrary(object):
         if p == None:
           raise Exception("Did not receive any answer")
         else:
-          self.builtin.log(p.keys())
-          p = { k.decode('UTF-8'): p[k]  for k in p.keys() if type(k) == str}
           return p
 
     def create_server(self, alias, address, port, secret, dictionary='dictionary'):
