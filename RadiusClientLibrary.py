@@ -61,11 +61,8 @@ class RadiusClientLibrary(object):
         if p == None:
           raise Exception("Did not receive any answer")
         else:
-<<<<<<< HEAD
-=======
           self.builtin.log(p.keys())
           p = { k: p[k]  for k in p.keys() if type(k) == str}
->>>>>>> parent of 833b2f9... unicode keys for attributes
           return p
 
     def create_server(self, alias, address, port, secret, dictionary='dictionary'):
