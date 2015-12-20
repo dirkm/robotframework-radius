@@ -34,10 +34,8 @@ class RadiusClientLibrary(object):
           p = packet.AuthPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']), authenticator=authenticator)
         elif getattr(packet,code) in [packet.AccountingRequest]:
           p = packet.AcctPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']), authenticator=authenticator)
-	self.builtin.log(p)
 
         for (k,v) in attributes.items():
-            self.builtin.log((k,v))
             if k == u'User-Password':
                 p[str(k)] = p.PwCrypt(str(v))
             else:
@@ -60,7 +58,7 @@ class RadiusClientLibrary(object):
             p = packet.Packet(secret=session['secret'],packet=data,dict=dictionary.Dictionary(session['dictionary']))
             if p.code != getattr(packet,code):
                 raise Exception("received {}",format(p.code))
-            self.builtin.log(p.keys())
+            self.builtin.log(p)
             unicode_attr = { unicode(k): p[k]  for k in p.keys() if type(k) == str}
       
             self.builtin.log(unicode_attr.keys())
