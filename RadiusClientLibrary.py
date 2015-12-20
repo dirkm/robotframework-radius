@@ -66,7 +66,7 @@ class RadiusClientLibrary(object):
           unicode_attr = { unicode(k): p[k]  for k in p.keys() if type(k) == str}
       
           self.builtin.log(unicode_attr.keys())
-        return p
+          return unicode_attr
 
     def create_server(self, alias, address, port, secret, dictionary='dictionary'):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
