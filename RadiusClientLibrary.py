@@ -56,6 +56,7 @@ class RadiusClientLibrary(object):
         if ready[0]:
             data, addr = session['sock'].recvfrom(1024)
             p = packet.Packet(secret=session['secret'],packet=data,dict=dictionary.Dictionary(session['dictionary']))
+            self.builtin.log(p.dict.attributes)
             if p.code != getattr(packet,code):
                 raise Exception("received {}",format(p.code))
             self.builtin.log(p)
