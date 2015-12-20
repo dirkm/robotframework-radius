@@ -34,6 +34,7 @@ class RadiusClientLibrary(object):
           p = packet.AuthPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']), authenticator=authenticator)
         elif getattr(packet,code) in [packet.AccountingRequest]:
           p = packet.AcctPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']), authenticator=authenticator)
+	self.builtin.log(p)
 
         for (k,v) in attributes.items():
             self.builtin.log((k,v))
