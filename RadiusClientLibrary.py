@@ -56,17 +56,19 @@ class RadiusClientLibrary(object):
         if ready[0]:
             data, addr = session['sock'].recvfrom(1024)
             p = packet.Packet(secret=session['secret'],packet=data,dict=dictionary.Dictionary(session['dictionary']))
-            
             if p.code != getattr(packet,code):
                 raise Exception("received {}",format(p.code))
-        if p == None:
-          raise Exception("Did not receive any answer")
-        else:
-          self.builtin.log(p.keys())
-          unicode_attr = { unicode(k): p[k]  for k in p.keys() if type(k) == str}
+            self.builtin.log(p.keys())
+            unicode_attr = { unicode(k): p[k]  for k in p.keys() if type(k) == str}
       
-          self.builtin.log(unicode_attr.keys())
-          return unicode_attr
+            self.builtin.log(unicode_attr.keys())
+            return unicode_attr
+
+        else:
+            raise Exception("Did not receive any answer")
+        #if type(p) == dict:
+        #  raise Exception("Did not receive any answer")
+        
 
     def create_server(self, alias, address, port, secret, dictionary='dictionary'):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
