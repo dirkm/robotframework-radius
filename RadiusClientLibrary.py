@@ -50,7 +50,7 @@ class RadiusClientLibrary(object):
         session['sock'].sendto(raw,(session['address'],session['port']))
         
     def receive_response(self, alias, code):
-        p = None
+        p = {}
         session = self._cache.switch(alias)
         ready = select.select([session['sock']], [], [], 5)
         if ready[0]:
