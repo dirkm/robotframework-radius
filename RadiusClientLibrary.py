@@ -99,3 +99,4 @@ class RadiusClientLibrary(object):
           unicode_attr = { unicode(k): p[k]  for k in p.keys() if type(k) == str}
       
           self.builtin.log(unicode_attr.keys())
+        return p
