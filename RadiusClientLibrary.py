@@ -100,3 +100,10 @@ class RadiusClientLibrary(object):
       
           self.builtin.log(unicode_attr.keys())
         return p
+
+    def send_response(self,alias,p,code,attr={}):
+        session = self._cache.switch(alias)
+        req = p
+        p.CreateReply(attr)
+        p.code = getattr(packet,code)
+        
