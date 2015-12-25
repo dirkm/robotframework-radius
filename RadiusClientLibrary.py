@@ -2,99 +2,101 @@ from pyrad import packet,dictionary
 import socket
 import six
 import select
+import robot
+from robot.libraries.BuiltIn import BuiltIn
 
 class RadiusClientLibrary(object):
-    def __init__(self,addr,port,secret,dictionary='dictionary'):
-        self.addr = (addr, int(port))
-        self.attributes = []
-        self.secret = str(secret)
-        self.dictionary = dictionary
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.settimeout(3.0)
-        self.sock.setblocking(0)
+    def __init__(self):
+        self._cache = robot.utils.ConnectionCache('No Sessions Created')
+        self.builtin = BuiltIn()
 
-    def add_attribute(self,name,value):
-        if type(name) == unicode:
-            name = str(name)
-        self.attributes.append((name,value))
+    def create_session(self, alias, address, port, secret, dictionary='dictionary',authenticator=True):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind(('',0))
+        sock.settimeout(3.0)
+        sock.setblocking(0)
+        session= { 'sock': sock,
+                   'address': address,
+                   'port': int(port),
+                   'secret': six.b(str(secret)),
+                   'dictionary': dictionary,
+                   'authenticator': True }
+        self._cache.register(session, alias=alias)
+        return session
 
-    def send_access_request(self):
-        p = packet.AuthPacket(code=1, secret=six.b(self.secret), id=124,dict=dictionary.Dictionary(self.dictionary))
+    def send_request(self, alias, code, attributes):
+        session = self._cache.switch(alias)
+        authenticator = None
+        if session['authenticator']:
+            authenticator = packet.Packet.CreateAuthenticator()
         
-        for attr in self.attributes:
-            if attr[0] == 'User-Password':
-                p[attr[0]] = p.PwCrypt(attr[1])
+        if getattr(packet,code) in [packet.AccessRequest]:
+          p = packet.AuthPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']), authenticator=authenticator)
+        elif getattr(packet,code) in [packet.AccountingRequest]:
+          p = packet.AcctPacket(code=getattr(packet,code), secret=session['secret'], dict=dictionary.Dictionary(session['dictionary']), authenticator=authenticator)
+
+        for (k,v) in attributes.items():
+            if k == u'User-Password':
+                p[str(k)] = p.PwCrypt(str(v))
             else:
-                p[attr[0]] = attr[1]
+                self.builtin.log(k)
+                if type(k) == unicode:
+                  p[str(k)] = v
+                else:
+                  p[k] = v
 
         raw = p.RequestPacket()
        
-        self.sock.sendto(raw,self.addr)
-
-    def receive_access_accept(self):
-        ready = select.select([self.sock], [], [], 5)
-        p = None
+        session['sock'].sendto(raw,(session['address'],session['port']))
+        
+    def receive_response(self, alias, code):
+        p = {}
+        session = self._cache.switch(alias)
+        ready = select.select([session['sock']], [], [], 5)
         if ready[0]:
-            data, addr = self.sock.recvfrom(1024)
-            p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary(self.dictionary))
-            
-            if p.code != packet.AccessAccept:
+            data, addr = session['sock'].recvfrom(1024)
+            p = packet.Packet(secret=session['secret'],packet=data,dict=dictionary.Dictionary(session['dictionary']))
+            self.builtin.log(p.viewitems())
+            if p.code != getattr(packet,code):
                 raise Exception("received {}",format(p.code))
-        if not p:
+            self.builtin.log(p)
+            unicode_attr = { unicode(k): p[k]  for k in p.keys() if type(k) == str}
+      
+            self.builtin.log(unicode_attr.keys())
+            return unicode_attr
+
+        else:
+            raise Exception("Did not receive any answer")
+        #if type(p) == dict:
+        #  raise Exception("Did not receive any answer")
+        
+
+    def create_server(self, alias, address, port, secret, dictionary='dictionary'):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind((address,port))
+        sock.settimeout(3.0)
+        sock.setblocking(0)
+        server= { 'sock': sock,
+                   'secret': six.b(str(secret)),
+                   'dictionary': dictionary}
+        self._cache.register(server, alias=alias)
+        return server
+
+    def receive_request(self, alias, code):
+        p = None
+        session = self._cache.switch(alias)
+        ready = select.select([session['sock']], [], [], 5)
+        if ready[0]:
+            data, addr = session['sock'].recvfrom(1024)
+            p = packet.Packet(secret=session['secret'],packet=data,dict=dictionary.Dictionary(session['dictionary']))
+            
+            if p.code != getattr(packet,code):
+                raise Exception("received {}",format(p.code))
+        if p == None:
           raise Exception("Did not receive any answer")
         else:
-          self.response = p
-
-    def response_attribute_count(self):
-        return len(self.response)
-    def response_attribute_equals(self,k,v):
-        if type(k) == unicode:
-          k = str(k)
-        if type(v) == unicode:
-          v = str(v)
-        if  k not in self.response:
-          raise Exception('Attribute {0} does not exist'.format(k))
-        if type(v) == list:
-          if v != self.response[k]:
-            raise Exception('{0} != {1}'.format(self.response[k], v))
-
-        else:
-          if v not in self.response[k]:
-            raise Exception('{0} not in  {1}'.format(self.response[k], v))
-
-    def receive_access_reject(self):
-        ready = select.select([self.sock], [], [], 5)
-        p = None
-        if ready[0]:
-            data, addr = self.sock.recvfrom(1024)
-            p = packet.Packet(secret=self.secret,packet=data,dict=dictionary.Dictionary(self.dictionary))
-            
-            if p.code != packet.AccessReject:
-                raise Exception("Did not receive Access Reject")
-        print p
-        self.response = p
-
-    def send_accounting_request(self):
-        p = packet.AcctPacket(secret=self.secret, id=124,dict=dictionary.Dictionary(self.dictionary))
-        print self.attributes
-        for attr in self.attributes:
-            p[attr[0]] = attr[1]
-        print p
-        raw = p.RequestPacket()
-       
-        self.sock.sendto(raw,self.addr)
-
-    def receive_accounting_response(self):
-        ready = select.select([self.sock], [], [], 1)
-        p = None
-        while True:
-            if ready[0]:
-                data, addr = self.sock.recvfrom(1024)
-                p = packet.AcctPacket(secret=self.secret,packet=data,dict=dictionary.Dictionary(self.dictionary))
-                break
-        if p.code != packet.AccountingResponse:
-            raise Exception("received {}",format(p.code))
-        elif  p == None:
-            raise Exception("Did not receive any answer")
-        print p
-        self.response = p
+          self.builtin.log(p.keys())
+          unicode_attr = { unicode(k): p[k]  for k in p.keys() if type(k) == str}
+      
+          self.builtin.log(unicode_attr.keys())
+        return p
