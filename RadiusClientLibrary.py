@@ -99,6 +99,7 @@ class RadiusClientLibrary(object):
           unicode_attr = { unicode(k): p[k]  for k in p.keys() if type(k) == str}
       
           self.builtin.log(unicode_attr.keys())
+        p.addr = addr
         return p
 
     def send_response(self,alias,p,code,attr={}):
@@ -107,4 +108,8 @@ class RadiusClientLibrary(object):
         p.code = getattr(packet,code)
         for (k,v) in attr.items():
             reply[k] = v
+
+        
+        raw = p.ReplyPacket()
+        session['sock'].sendto(raw,p.addr)
         
