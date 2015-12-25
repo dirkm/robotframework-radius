@@ -103,8 +103,8 @@ class RadiusClientLibrary(object):
 
     def send_response(self,alias,p,code,attr={}):
         session = self._cache.switch(alias)
-        req = p
-        print attr
-        p.CreateReply(attr)
+        reply = p.CreateReply()
         p.code = getattr(packet,code)
+        for (k,v) in attr.items():
+            reply[k] = v
         
