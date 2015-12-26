@@ -1,5 +1,8 @@
 robotframework_radius.egg-info
 *.pyc
+*.html
+*.xml
+*.deb
 build
 dist
 venv
