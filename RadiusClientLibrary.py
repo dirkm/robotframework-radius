@@ -49,15 +49,14 @@ class RadiusClientLibrary(object):
                                      secret=session['secret'],
                                      dict=dictionary.Dictionary(session['dictionary']),
                                      authenticator=authenticator)
-        for (k, v) in attributes.items():
-            if k == u'User-Password':
-                radp[str(k)] = radp.PwCrypt(str(v))
+        for (key, val) in attributes.items():
+            if key == u'User-Password':
+                radp[str(key)] = radp.PwCrypt(str(val))
             else:
-                self.builtin.log(k)
-                if isinstance(k,unicode):
-                    radp[str(k)] = v
+                if isinstance(key, unicode):
+                    radp[str(key)] = val
                 else:
-                    radp[k] = v
+                    radp[key] = val
 
         raw = radp.RequestPacket()
         session['sock'].sendto(raw, (session['address'], session['port']))
@@ -67,7 +66,7 @@ class RadiusClientLibrary(object):
         session = self._cache.switch(alias)
         ready = select.select([session['sock']], [], [], float(timeout))
         if ready[0]:
-            data, addr = session['sock'].recvfrom(1024)
+            data, _ = session['sock'].recvfrom(1024)
             radp = packet.Packet(secret=session['secret'],
                                  packet=data,
                                  dict=dictionary.Dictionary(session['dictionary']))
@@ -82,9 +81,9 @@ class RadiusClientLibrary(object):
         sock.bind((address,int(port)))
         #sock.settimeout(3.0)
         sock.setblocking(0)
-        server= {'sock': sock,
-                 'secret': six.b(str(secret)),
-                 'dictionary': dictionary}
+        server = {'sock': sock,
+                  'secret': six.b(str(secret)),
+                  'dictionary': dictionary}
         self._cache.register(server, alias=alias)
         return server
 
@@ -98,18 +97,19 @@ class RadiusClientLibrary(object):
                                  packet=data,
                                  dict=dictionary.Dictionary(session['dictionary']))
             
-            if radp.code != getattr(packet,code):
-                raise Exception("received {}",format(radp.code))
+            if radp.code != getattr(packet, code):
+                raise Exception("received {}", format(radp.code))
         if radp is None:
-          raise Exception("Did not receive any answer")
+            raise Exception("Did not receive any answer")
         radp.addr = addr
         return radp
 
-    def send_response(self, alias, request, code, attr={}):
+    def send_response(self, alias, request, code, attr=None):
         session = self._cache.switch(alias)
         reply = request.CreateReply()
-        request.code = getattr(packet,code)
-        for (key, val) in attr.items():
-            reply[key] = val
+        request.code = getattr(packet, code)
+        if attr:
+            for (key, val) in attr.items():
+                reply[key] = val
         raw = request.ReplyPacket()
         session['sock'].sendto(raw, request.addr)
