@@ -2,7 +2,7 @@
 Library		RadiusClientLibrary
 Library		DateTime
 Test Template	Server Receive Timeout
-Suite Setup	Start Radius Server
+Test Setup	Start Radius Server
 
 *** Test Cases ***
 0.3 Second  0.3

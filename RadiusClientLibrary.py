@@ -7,7 +7,7 @@ from robot.libraries.BuiltIn import BuiltIn
 
 class RadiusClientLibrary(object):
 
-    ROBOT_LIBRARY_SCOPE = 'TEST SUITE'
+    ROBOT_LIBRARY_SCOPE = 'TEST CASE'
 
     def __init__(self):
         self._cache = robot.utils.ConnectionCache('No Sessions Created')
@@ -31,6 +31,7 @@ class RadiusClientLibrary(object):
         return session
 
     create_client = create_session
+
 
     def send_request(self, alias, code, attributes):
         session = self._cache.switch(alias)
@@ -70,7 +71,7 @@ class RadiusClientLibrary(object):
             radp = packet.Packet(secret=session['secret'],
                                  packet=data,
                                  dict=dictionary.Dictionary(session['dictionary']))
-            if radp.code != getattr(packet,code):
+            if radp.code != getattr(packet, code):
                 raise Exception("received {}", format(radp.code))
         else:
             raise Exception("Did not receive any answer")
@@ -78,7 +79,7 @@ class RadiusClientLibrary(object):
 
     def create_server(self, alias, address, port, secret, dictionary='dictionary'):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind((address,int(port)))
+        sock.bind((address, int(port)))
         #sock.settimeout(3.0)
         sock.setblocking(0)
         server = {'sock': sock,
@@ -113,3 +114,6 @@ class RadiusClientLibrary(object):
                 reply[key] = val
         raw = request.ReplyPacket()
         session['sock'].sendto(raw, request.addr)
+
+    def attribute_exists(self, packet,key):
+        return packet[key.encode('ascii')]
