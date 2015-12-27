@@ -10,7 +10,10 @@ Request Response Requests Should Pass
     ${client_req}=    Send Request    client    AccessRequest    ${req_attr}
     ${server_req}=    Receive Request    server    AccessRequest
     Should Contain Attribute    ${server_req}    User-Name
-    Run Keyword And Expect Error    KeyError: 25    Should Contain Attribute    ${server_req}    Class
+    Should Contain Attribute    ${server_req}    key=User-Name
+    Should Contain Attribute    ${server_req}    key=User-Name   val=testuser
+    Run Keyword And Expect Error    *    Should Contain Attribute    ${server_req}    key=User-Name   val=wronguser
+    Should Contain Attribute    ${server_req}    User-Name	val=testuser
     Send Response    server    ${server_req}    AccessAccept
     Receive Response    client    AccessAccept
 

@@ -119,6 +119,13 @@ class RadiusLibrary(object):
         raw = request.ReplyPacket()
         session['sock'].sendto(raw, request.addr)
 
-    def should_contain_attribute(self, pckt, key):
+    def should_contain_attribute(self, pckt, key=None,val=None):
         """Test if attribute exists"""
-        return pckt[key.encode('ascii')]
+
+        if key and not val:
+            return pckt[key.encode('ascii')]
+        if key and val:
+            if val in pckt[key.encode('ascii')]:
+                return
+            else:
+                raise BaseException('value does not match')
