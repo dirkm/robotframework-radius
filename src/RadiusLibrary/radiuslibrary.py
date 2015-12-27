@@ -5,7 +5,7 @@ import six
 import robot
 from robot.libraries.BuiltIn import BuiltIn
 
-class RadiusClientLibrary(object):
+class RadiusLibrary(object):
 
     ROBOT_LIBRARY_SCOPE = 'TEST CASE'
 
@@ -62,7 +62,7 @@ class RadiusClientLibrary(object):
         raw = radp.RequestPacket()
         session['sock'].sendto(raw, (session['address'], session['port']))
         return radp
-        
+
     def receive_response(self, alias, code, timeout=15):
         session = self._cache.switch(alias)
         ready = select.select([session['sock']], [], [], float(timeout))
@@ -97,7 +97,6 @@ class RadiusClientLibrary(object):
             radp = packet.Packet(secret=session['secret'],
                                  packet=data,
                                  dict=dictionary.Dictionary(session['dictionary']))
-            
             if radp.code != getattr(packet, code):
                 raise Exception("received {}", format(radp.code))
         if radp is None:
