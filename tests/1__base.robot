@@ -1,5 +1,5 @@
 *** Settings ***
-Library		RadiusClientLibrary
+Library		RadiusLibrary
 Library		Collections
 Library		DateTime
 Test Setup	Setup Client And Server
