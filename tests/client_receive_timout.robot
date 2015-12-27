@@ -1,5 +1,5 @@
 *** Settings ***
-Library		RadiusClientLibrary
+Library		RadiusLibrary
 Library		DateTime
 Test Template	Client Receive Timeout
 

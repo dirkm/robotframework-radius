@@ -1,5 +1,5 @@
 *** Settings ***
-Library		RadiusClientLibrary
+Library		RadiusLibrary
 Library		DateTime
 Test Template	Server Receive Timeout
 Test Setup	Start Radius Server
