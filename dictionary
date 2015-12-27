@@ -1,0 +1,4 @@
+$INCLUDE /usr/share/freeradius/dictionary.rfc2865
+$INCLUDE /usr/share/freeradius/dictionary.rfc2866
+$INCLUDE /usr/share/freeradius/dictionary.rfc2869
+$INCLUDE /usr/share/freeradius/dictionary.erx
