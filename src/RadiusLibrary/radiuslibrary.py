@@ -51,6 +51,7 @@ class RadiusLibrary(object):
                                      secret=session['secret'],
                                      dict=session['dictionary'],
                                      authenticator=authenticator)
+        #TODO: Needs Refactor
         for (key, val) in attributes.items():
             if key == u'User-Password':
                 radp[str(key)] = radp.PwCrypt(str(val))
@@ -79,7 +80,8 @@ class RadiusLibrary(object):
             raise Exception("Did not receive any answer")
         return radp
 
-    def create_server(self, alias, address, port, secret, raddict='dictionary'):
+    #def create_server(self, alias=u'default', address='127.0.0.1', port=0, secret='secret', raddict='dictionary'):
+    def create_server(self, alias=u'default', address='127.0.0.1', port=0, secret='secret', **kwargs):
         """Creates Radius Server"""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((address, int(port)))
@@ -87,7 +89,7 @@ class RadiusLibrary(object):
         sock.setblocking(0)
         server = {'sock': sock,
                   'secret': six.b(str(secret)),
-                  'dictionary': dictionary.Dictionary(raddict)}
+                  'dictionary': dictionary.Dictionary(kwargs['raddict'])}
         self._cache.register(server, alias=alias)
         return server
 
@@ -119,13 +121,15 @@ class RadiusLibrary(object):
         raw = request.ReplyPacket()
         session['sock'].sendto(raw, request.addr)
 
-    def should_contain_attribute(self, pckt, key=None,val=None):
+    def should_contain_attribute(self, pckt, key=None, val=None):
         """Test if attribute exists"""
 
         if key and not val:
             return pckt[key.encode('ascii')]
-        if key and val:
+        elif key and val:
             if val in pckt[key.encode('ascii')]:
                 return
             else:
                 raise BaseException('value does not match')
+        else:
+            raise BaseException('invalid arguments')
