@@ -1,3 +1,4 @@
+"""RobotFramework Radius Module"""
 import select
 import socket
 from pyrad import packet, dictionary
@@ -6,6 +7,7 @@ import robot
 from robot.libraries.BuiltIn import BuiltIn
 
 class RadiusLibrary(object):
+    """Main Class"""
 
     ROBOT_LIBRARY_SCOPE = 'TEST CASE'
 
@@ -13,9 +15,10 @@ class RadiusLibrary(object):
         self._cache = robot.utils.ConnectionCache('No Sessions Created')
         self.builtin = BuiltIn()
 
-    def create_session(self, alias, address, port,
-                       secret, dictionary='dictionary',
-                       authenticator=True):
+    def create_client(self, alias, address, port,
+                      secret, raddict='dictionary',
+                      authenticator=True):
+        """Creates client"""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(('', 0))
         sock.settimeout(3.0)
@@ -24,16 +27,14 @@ class RadiusLibrary(object):
                    'address': address,
                    'port': int(port),
                    'secret': six.b(str(secret)),
-                   'dictionary': dictionary,
+                   'dictionary': dictionary.Dictionary(raddict),
                    'authenticator': authenticator}
 
         self._cache.register(session, alias=alias)
         return session
 
-    create_client = create_session
-
-
     def send_request(self, alias, code, attributes):
+        """Sends radius request"""
         session = self._cache.switch(alias)
         authenticator = None
         if session['authenticator']:
@@ -43,12 +44,12 @@ class RadiusLibrary(object):
         if getattr(packet, code) in [packet.AccessRequest]:
             radp = packet.AuthPacket(code=getattr(packet, code),
                                      secret=session['secret'],
-                                     dict=dictionary.Dictionary(session['dictionary']),
+                                     dict=session['dictionary'],
                                      authenticator=authenticator)
         elif getattr(packet, code) in [packet.AccountingRequest]:
             radp = packet.AcctPacket(code=getattr(packet, code),
                                      secret=session['secret'],
-                                     dict=dictionary.Dictionary(session['dictionary']),
+                                     dict=session['dictionary'],
                                      authenticator=authenticator)
         for (key, val) in attributes.items():
             if key == u'User-Password':
@@ -64,31 +65,34 @@ class RadiusLibrary(object):
         return radp
 
     def receive_response(self, alias, code, timeout=15):
+        """Receives Response"""
         session = self._cache.switch(alias)
         ready = select.select([session['sock']], [], [], float(timeout))
         if ready[0]:
             data, _ = session['sock'].recvfrom(1024)
             radp = packet.Packet(secret=session['secret'],
                                  packet=data,
-                                 dict=dictionary.Dictionary(session['dictionary']))
+                                 dict=session['dictionary'])
             if radp.code != getattr(packet, code):
                 raise Exception("received {}", format(radp.code))
         else:
             raise Exception("Did not receive any answer")
         return radp
 
-    def create_server(self, alias, address, port, secret, dictionary='dictionary'):
+    def create_server(self, alias, address, port, secret, raddict='dictionary'):
+        """Creates Radius Server"""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((address, int(port)))
         #sock.settimeout(3.0)
         sock.setblocking(0)
         server = {'sock': sock,
                   'secret': six.b(str(secret)),
-                  'dictionary': dictionary}
+                  'dictionary': dictionary.Dictionary(raddict)}
         self._cache.register(server, alias=alias)
         return server
 
     def receive_request(self, alias, code, timeout=15):
+        """Receives request"""
         radp = None
         session = self._cache.switch(alias)
         ready = select.select([session['sock']], [], [], float(timeout))
@@ -96,7 +100,7 @@ class RadiusLibrary(object):
             data, addr = session['sock'].recvfrom(1024)
             radp = packet.Packet(secret=session['secret'],
                                  packet=data,
-                                 dict=dictionary.Dictionary(session['dictionary']))
+                                 dict=session['dictionary'])
             if radp.code != getattr(packet, code):
                 raise Exception("received {}", format(radp.code))
         if radp is None:
@@ -105,6 +109,7 @@ class RadiusLibrary(object):
         return radp
 
     def send_response(self, alias, request, code, attr=None):
+        """Send Response"""
         session = self._cache.switch(alias)
         reply = request.CreateReply()
         request.code = getattr(packet, code)
@@ -114,5 +119,6 @@ class RadiusLibrary(object):
         raw = request.ReplyPacket()
         session['sock'].sendto(raw, request.addr)
 
-    def attribute_exists(self, packet,key):
-        return packet[key.encode('ascii')]
+    def should_contain_attribute(self, pckt, key):
+        """Test if attribute exists"""
+        return pckt[key.encode('ascii')]
