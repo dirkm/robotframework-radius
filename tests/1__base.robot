@@ -13,11 +13,17 @@ Request Response Requests Should Pass
     Should Contain Attribute    ${server_req}    key=User-Name
     Should Contain Attribute    ${server_req}    ${1}
     Should Contain Attribute    ${server_req}    key=${1}
-    Should Contain Attribute    ${server_req}    key=User-Name   val=testuser
-    Run Keyword And Expect Error    *    Should Contain Attribute    ${server_req}    key=User-Name   val=wronguser
-    Should Contain Attribute    ${server_req}    User-Name	val=testuser
+    Should Contain Attribute    ${server_req}    key=User-Name    val=testuser
+    Run Keyword And Expect Error    *    Should Contain Attribute    ${server_req}    key=User-Name    val=wronguser
+    Should Contain Attribute    ${server_req}    User-Name    val=testuser
     Send Response    server    ${server_req}    AccessAccept
     Receive Response    client    AccessAccept
+    Destroy Server    server
+
+Server Recreation Should not fail
+    Create Server    server    127.0.0.1    11812    secret=mysecret    raddict=dictionary
+    Destroy Server    server
+    Create Server    server    127.0.0.1    11812    secret=mysecret    raddict=dictionary
     Destroy Server    server
 
 *** Keywords ***

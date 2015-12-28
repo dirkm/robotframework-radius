@@ -7,6 +7,15 @@ import robot
 from robot.libraries.BuiltIn import BuiltIn
 from ast import literal_eval as make_tuple
 
+class ClientConnection:
+    def __init__(self,sock,address,port,secret,raddict):
+        self._sock = sock
+        self.address = address
+        self.port = port
+        self.secret = secret
+        self.raddict =  dictionary.Dictionary(raddict)
+        self.close = self._sock.close
+
 class RadiusLibrary(object):
     """Main Class"""
 
@@ -85,6 +94,7 @@ class RadiusLibrary(object):
     def create_server(self, alias=u'default', address='127.0.0.1', port=0, secret='secret', raddict='dictionary'):
         """Creates Radius Server"""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((address, int(port)))
         #sock.settimeout(3.0)
         sock.setblocking(0)
@@ -97,6 +107,7 @@ class RadiusLibrary(object):
     def destroy_server(self,alias):
         session = self._cache.switch(alias)
         session['sock'].close()
+        self._cache.empty_cache()
 
     def receive_request(self, alias, code, timeout=15):
         """Receives request"""
@@ -128,15 +139,16 @@ class RadiusLibrary(object):
 
     def should_contain_attribute(self, pckt, key=None, val=None):
         """Test if attribute exists"""
+        if pckt.dict.attrindex.HasBackward(key):
+            numkey = pckt.dict.attrindex.GetBackward(key)
+        elif pckt.dict.attrindex.HasForward(key):
+            numkey = pckt.dict.attrindex.GetForward(key)
+        elif isinstance(key,int):
+            numkey = int(key)
 
         if key and not val:
-            if isinstance(key,int):
-                return pckt[key]
-            elif ',' in key:
-                vendorid, attrid = [int(a) for a in key.split(',')]
-                return pckt[(vendorid, attrid)]
-            else:
-                return pckt[key.encode('ascii')]
+            return pckt[numkey]
+
         elif key and val:
             if val in pckt[key.encode('ascii')]:
                 return
