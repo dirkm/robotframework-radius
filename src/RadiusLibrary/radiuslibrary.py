@@ -5,6 +5,7 @@ from pyrad import packet, dictionary
 import six
 import robot
 from robot.libraries.BuiltIn import BuiltIn
+from ast import literal_eval as make_tuple
 
 class RadiusLibrary(object):
     """Main Class"""
@@ -93,6 +94,10 @@ class RadiusLibrary(object):
         self._cache.register(server, alias=alias)
         return server
 
+    def destroy_server(self,alias):
+        session = self._cache.switch(alias)
+        session['sock'].close()
+
     def receive_request(self, alias, code, timeout=15):
         """Receives request"""
         radp = None
@@ -125,10 +130,11 @@ class RadiusLibrary(object):
         """Test if attribute exists"""
 
         if key and not val:
-            if key == u'ERX-LI-Action':
-                return pckt[(4874,58)]
             if isinstance(key,int):
                 return pckt[key]
+            elif ',' in key:
+                vendorid, attrid = [int(a) for a in key.split(',')]
+                return pckt[(vendorid, attrid)]
             else:
                 return pckt[key.encode('ascii')]
         elif key and val:

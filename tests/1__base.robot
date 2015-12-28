@@ -18,6 +18,7 @@ Request Response Requests Should Pass
     Should Contain Attribute    ${server_req}    User-Name	val=testuser
     Send Response    server    ${server_req}    AccessAccept
     Receive Response    client    AccessAccept
+    Destroy Server    server
 
 *** Keywords ***
 Setup Client And Server

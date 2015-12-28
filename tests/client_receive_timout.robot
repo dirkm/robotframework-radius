@@ -8,8 +8,6 @@ Test Template	Client Receive Timeout
 0.4 Second  0.4
 0.5 Second  0.5
 1.0 Second  1.0
-2.0 Second  2.0
-5.0 Second  5.0
 
 *** Keywords ***
 Client Receive Timeout
