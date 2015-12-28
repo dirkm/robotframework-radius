@@ -125,6 +125,8 @@ class RadiusLibrary(object):
         """Test if attribute exists"""
 
         if key and not val:
+            if not pckt.has_key(key):
+               raise BaseException('key not found')
             return pckt[key.encode('ascii')]
         elif key and val:
             if val in pckt[key.encode('ascii')]:
