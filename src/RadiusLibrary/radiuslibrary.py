@@ -153,6 +153,6 @@ class RadiusLibrary(object):
             if val in pckt[key.encode('ascii')]:
                 return
             else:
-                raise BaseException('value does not match')
+                raise BaseException('value does not contain: {}'.fornmat(val))
         else:
             raise BaseException('invalid arguments')
