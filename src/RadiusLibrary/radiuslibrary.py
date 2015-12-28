@@ -81,7 +81,7 @@ class RadiusLibrary(object):
         return radp
 
     #def create_server(self, alias=u'default', address='127.0.0.1', port=0, secret='secret', raddict='dictionary'):
-    def create_server(self, alias=u'default', address='127.0.0.1', port=0, secret='secret', **kwargs):
+    def create_server(self, alias=u'default', address='127.0.0.1', port=0, secret='secret', raddict='dictionary'):
         """Creates Radius Server"""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((address, int(port)))
@@ -89,7 +89,7 @@ class RadiusLibrary(object):
         sock.setblocking(0)
         server = {'sock': sock,
                   'secret': six.b(str(secret)),
-                  'dictionary': dictionary.Dictionary(kwargs['raddict'])}
+                  'dictionary': dictionary.Dictionary(raddict)}
         self._cache.register(server, alias=alias)
         return server
 
@@ -125,9 +125,10 @@ class RadiusLibrary(object):
         """Test if attribute exists"""
 
         if key and not val:
-            if not pckt.has_key(key):
-               raise BaseException('key not found')
-            return pckt[key.encode('ascii')]
+            if isinstance(key,int):
+                return pckt[key]
+            else:
+                return pckt[key.encode('ascii')]
         elif key and val:
             if val in pckt[key.encode('ascii')]:
                 return

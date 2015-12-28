@@ -11,6 +11,8 @@ Request Response Requests Should Pass
     ${server_req}=    Receive Request    server    AccessRequest
     Should Contain Attribute    ${server_req}    User-Name
     Should Contain Attribute    ${server_req}    key=User-Name
+    Should Contain Attribute    ${server_req}    ${1}
+    Should Contain Attribute    ${server_req}    key=${1}
     Should Contain Attribute    ${server_req}    key=User-Name   val=testuser
     Run Keyword And Expect Error    *    Should Contain Attribute    ${server_req}    key=User-Name   val=wronguser
     Should Contain Attribute    ${server_req}    User-Name	val=testuser
@@ -19,5 +21,5 @@ Request Response Requests Should Pass
 
 *** Keywords ***
 Setup Client And Server
-    Create Client    client    127.0.0.1    11812    mysecret    dictionary
-    Create Server    server    127.0.0.1    11812    mysecret    dictionary
+    Create Client    client    127.0.0.1    11812    mysecret    raddict=dictionary
+    Create Server    server    127.0.0.1    11812    secret=mysecret    raddict=dictionary

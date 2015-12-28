@@ -14,7 +14,7 @@ Test Setup	Start Radius Server
 
 *** Keywords ***
 Start Radius Server
-	Create Server	server	127.0.0.1	11812	mysecret	dictionary
+	Create Server	server	127.0.0.1	11812	mysecret	raddict=dictionary
 Server Receive Timeout
 	[Arguments]    ${timeout}
 	${start}=	Get Current Date

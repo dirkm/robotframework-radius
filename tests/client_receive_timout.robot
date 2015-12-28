@@ -14,7 +14,7 @@ Test Template	Client Receive Timeout
 *** Keywords ***
 Client Receive Timeout
 	[Arguments]    ${timeout}
-	Create Client	client	127.0.0.1	11812	mysecret	dictionary
+	Create Client	client	127.0.0.1	11812	mysecret	raddict=dictionary
 	${start}=	Get Current Date
 	Run Keyword And Expect Error		*	Receive Response		client			AccessAccept	${timeout}
 	${end}=		Get Current Date
