@@ -125,6 +125,8 @@ class RadiusLibrary(object):
         """Test if attribute exists"""
 
         if key and not val:
+            if key == u'ERX-LI-Action':
+                return pckt[(4874,58)]
             if isinstance(key,int):
                 return pckt[key]
             else:
