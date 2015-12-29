@@ -11,8 +11,6 @@ Request Response Requests Should Pass
     ${server_req}=    Receive Request    server    AccessRequest
     Should Contain Attribute    ${server_req}    User-Name
     Should Contain Attribute    ${server_req}    key=User-Name
-    Should Contain Attribute    ${server_req}    ${1}
-    Should Contain Attribute    ${server_req}    key=${1}
     Should Contain Attribute    ${server_req}    key=User-Name    val=testuser
     Run Keyword And Expect Error    *    Should Contain Attribute    ${server_req}    key=User-Name    val=wronguser
     Should Contain Attribute    ${server_req}    User-Name    val=testuser
@@ -21,10 +19,18 @@ Request Response Requests Should Pass
     Destroy Server    server
 
 Server Recreation Should not fail
-    Create Server    server    127.0.0.1    11812    secret=mysecret    raddict=dictionary
     Destroy Server    server
     Create Server    server    127.0.0.1    11812    secret=mysecret    raddict=dictionary
-    Destroy Server    server
+
+Client multiple Class attributes should pass
+    ${class1}=    Convert To Bytes    KW20MB
+    ${class2}=    Convert To Bytes    KW30MB
+    ${class_list}=    Create List    ${class1}    ${class2}
+    ${req_attr}=    Create Dictionary    Class=${class_list}
+    ${client_req}=    Send Request    client    AccessRequest    ${req_attr}
+    ${server_req}=    Receive Request    server    AccessRequest
+    Should Contain Attribute    ${server_req}    key=Class    val=${class1}
+    Should Contain Attribute    ${server_req}    Class    ${class2}
 
 *** Keywords ***
 Setup Client And Server

@@ -61,16 +61,24 @@ class RadiusLibrary(object):
                                      secret=session['secret'],
                                      dict=session['dictionary'],
                                      authenticator=authenticator)
-        #TODO: Needs Refactor
-        for (key, val) in attributes.items():
-            if key == u'User-Password':
-                radp[str(key)] = radp.PwCrypt(str(val))
-            else:
-                if isinstance(key, unicode):
-                    radp[str(key)] = val
+        #TODO: Needs Refactor,look at contains attribute
+        self.builtin.log(radp)
+        for (key, vals) in attributes.items():
+            if not isinstance(vals,list):
+                vals = [vals]
+            for val in vals:
+                self.builtin.log(radp)
+                self.builtin.log(key)
+                self.builtin.log(vals)
+                self.builtin.log(val)
+                if key == u'User-Password':
+                    radp[str(key)] = radp.PwCrypt(str(val))
                 else:
-                    radp[key] = val
-
+                    if isinstance(key, unicode):
+                        radp.AddAttribute(str(key),val)
+                    else:
+                        radp[key] = val
+        self.builtin.log(radp)
         raw = radp.RequestPacket()
         session['sock'].sendto(raw, (session['address'], session['port']))
         return radp
@@ -153,6 +161,6 @@ class RadiusLibrary(object):
             if val in pckt[key.encode('ascii')]:
                 return
             else:
-                raise BaseException('value does not contain: {}'.fornmat(val))
+                raise BaseException('value "{}" does not contain: {}'.format(pckt[key.encode('ascii')],val))
         else:
             raise BaseException('invalid arguments')
