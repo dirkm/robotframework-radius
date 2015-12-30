@@ -5,7 +5,6 @@ from pyrad import packet, dictionary
 import six
 import robot
 from robot.libraries.BuiltIn import BuiltIn
-from ast import literal_eval as make_tuple
 
 class ClientConnection:
     def __init__(self,sock,address,port,secret,raddict):
@@ -67,12 +66,10 @@ class RadiusLibrary(object):
             if not isinstance(vals,list):
                 vals = [vals]
             for val in vals:
-                self.builtin.log(radp)
-                self.builtin.log(key)
-                self.builtin.log(vals)
-                self.builtin.log(val)
+                if isinstance(val,unicode):
+                    val = str(val)
                 if key == u'User-Password':
-                    radp[str(key)] = radp.PwCrypt(str(val))
+                    radp[str(key)] = radp.PwCrypt(val)
                 else:
                     if isinstance(key, unicode):
                         radp.AddAttribute(str(key),val)
@@ -83,7 +80,7 @@ class RadiusLibrary(object):
         session['sock'].sendto(raw, (session['address'], session['port']))
         return radp
 
-    def receive_response(self, alias, code, timeout=15):
+    def receive_response(self, alias, code, timeout=15.0):
         """Receives Response"""
         session = self._cache.switch(alias)
         ready = select.select([session['sock']], [], [], float(timeout))
