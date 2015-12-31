@@ -8,7 +8,6 @@ setup(name='robotframework-radius',
       author='Michael van Slingerland',
       author_email='michael@deviousops.nl',
       url='https://github.com/deviousops/robotframework-radius',
-      package_dir  = {'' : 'src'},
       packages     = ['RadiusLibrary'],
       install_requires=[
         "robotframework",
