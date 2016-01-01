@@ -76,7 +76,7 @@ class RadiusLibrary(object):
         request = client['request'].get_connection(alias)
         pdu =  request.RequestPacket()
         client['sock'].sendto(pdu, (client['address'], client['port']))
-        return request
+        return dict(request)
 
     ### Auth request section
 
