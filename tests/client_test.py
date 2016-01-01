@@ -62,14 +62,19 @@ class Auth(unittest.TestCase):
         req = self.radius.create_access_request()
         self.radius.add_request_attribute(u'User-Name',u'user1')
         send_req = self.radius.send_request()
+
         server_req = self.radius.receive_access_request()
-        self.radius.request_should_contain_attribute('User-Name')
-        self.radius.create_access_accept()
-        self.radius.add_response_attribute('Framed-IP-Address','192.168.121.1')
+        self.radius.request_should_contain_attribute(u'User-Name')
+        resp = self.radius.create_access_accept()
+        self.assertEqual(resp.code,2)
+
+        self.radius.add_response_attribute(u'Framed-IP-Address',u'192.168.121.1')
+        self.assertEqual(resp['Framed-IP-Address'],['192.168.121.1'])
         self.radius.send_response()
-        self.radius.receive_access_accept()
-        self.radius.response_should_contain_attribute('Framed-IP-Address')
-        self.radius.response_should_contain_attribute('Framed-IP-Address','192.168.121.1')
+        client_rcv = self.radius.receive_access_accept()
+        self.assertEqual(client_rcv['Framed-IP-Address'],['192.168.121.1'])
+        self.radius.response_should_contain_attribute(u'Framed-IP-Address')
+        #self.radius.response_should_contain_attribute('Framed-IP-Address',u'192.168.121.1')
 
 class Acct(unittest.TestCase):
     def setUp(self):
@@ -107,8 +112,9 @@ class Acct(unittest.TestCase):
         self.radius.add_request_attribute(u'User-Name',u'user1')
         send_req = self.radius.send_request()
         server_req = self.radius.receive_accounting_request()
-        self.radius.create_accounting_response()
+        resp = self.radius.create_accounting_response()
         self.radius.add_response_attribute('Framed-IP-Address','192.168.121.1')
+        #print resp['Framed-IP-Address']
         self.radius.send_response()
         self.radius.receive_accounting_response()
 #    def test_send(self):

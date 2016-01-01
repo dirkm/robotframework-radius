@@ -36,13 +36,15 @@ class RadiusLibrary(object):
         sock.settimeout(3.0)
         sock.setblocking(0)
         request = robot.utils.ConnectionCache('No Client Sessions Created')
+        response = robot.utils.ConnectionCache('No Client Response Created')
         session = {'sock': sock,
                    'address': str(address),
                    'port': int(port),
                    'secret': six.b(str(secret)),
                    'dictionary': dictionary.Dictionary(raddict),
                    'authenticator': authenticator,
-                   'request': request}
+                   'request': request,
+                   'response': response}
 
         self._client.register(session, alias=alias)
         return session
@@ -81,9 +83,9 @@ class RadiusLibrary(object):
 
     def add_response_attribute(self, key, value, alias=None):
         key = str(key)
-        client = self._get_session(self._client,alias)
-        request = client['request'].get_connection(alias)
-        request.AddAttribute(key,value)
+        server = self._get_session(self._server,alias)
+        response = server['response'].get_connection(alias)
+        response.AddAttribute(key,value)
 
     def send_response(self, alias=None):
         server = self._get_session(self._server, alias)
@@ -93,25 +95,6 @@ class RadiusLibrary(object):
         server['sock'].sendto(pdu, request.addr)
         return request
 
-    def receive_response(self,alias,code,timeout):
-        client = self._get_session(self._client, alias)
-        ready = select.select([client['sock']], [], [], float(timeout))
-
-        pkt = None
-        if ready[0]:
-            data, addr = client['sock'].recvfrom(1024)
-            pkt = packet.Packet(secret=client['secret'], packet=data,
-                                    dict=client['dictionary'])
-            client['request'].get_connection(str(pkt.id))
-
-            self.builtin.log(pkt.items)
-            if pkt.code != code:
-                self.builtin.log('Expected {0}, received {1}'.format(code, pkt.code))
-                raise Exception("received {}".format(pkt.code))
-        if pkt is None:
-            raise Exception("Did not receive any answer")
-
-        return pkt
 
     def receive_access_accept(self, alias=None, timeout=1):
         """Receives access accept"""
@@ -144,6 +127,26 @@ class RadiusLibrary(object):
             raise Exception("Did not receive any answer")
         pkt.addr = addr
         return pkt
+
+    def receive_response(self,alias,code,timeout):
+        client = self._get_session(self._client, alias)
+        ready = select.select([client['sock']], [], [], float(timeout))
+
+        pkt = None
+        if ready[0]:
+            data, addr = client['sock'].recvfrom(1024)
+            pkt = packet.Packet(secret=client['secret'], packet=data,
+            dict=client['dictionary'])
+            client['response'].register(pkt,str(pkt.id))
+
+            self.builtin.log(pkt.keys())
+            if pkt.code != code:
+                self.builtin.log('Expected {0}, received {1}'.format(code, pkt.code))
+                raise Exception("received {}".format(pkt.code))
+            if pkt is None:
+                raise Exception("Did not receive any answer")
+
+            return pkt
 
     def receive_accounting_request(self, alias=None, timeout=1):
         """Receives access request"""
@@ -181,9 +184,6 @@ class RadiusLibrary(object):
 
         reply = request.CreateReply()
         reply.code = packet.AccessAccept
-
-        pdu = reply.ReplyPacket()
-        session['sock'].sendto(pdu, request.addr)
         session['response'].register(reply,str(reply.code))
         #todo: deregister request
         return reply
@@ -239,7 +239,13 @@ class RadiusLibrary(object):
 
     def should_contain_attribute(self,cache,key,val,alias):
         session=self._get_session(cache, alias)
-        request = session['request'].get_connection(alias)
+        request = None
+        if cache == self._client:
+            request = session['response'].get_connection(alias)
+        elif cache == self._server:
+            request = session['request'].get_connection(alias)
+        else:
+            raise BaseException('No match for cache')
         if not val:
             if str(key) in request:
                 return True
