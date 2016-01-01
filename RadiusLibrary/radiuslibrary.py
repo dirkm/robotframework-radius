@@ -143,10 +143,10 @@ class RadiusLibrary(object):
             if pkt.code != code:
                 self.builtin.log('Expected {0}, received {1}'.format(code, pkt.code))
                 raise Exception("received {}".format(pkt.code))
-            if pkt is None:
+        if pkt is None:
                 raise Exception("Did not receive any answer")
 
-            return pkt
+        return pkt
 
     def receive_accounting_request(self, alias=None, timeout=1):
         """Receives access request"""
@@ -256,7 +256,7 @@ class RadiusLibrary(object):
             if str(key) in request and val in request[str(key)]:
                 return
             else:
-                raise BaseException('value not found')
+                raise BaseException('value "{}" not in {}'.format(val,request[str(key)]))
 
     def request_should_contain_attribute(self, key, val=None, alias=None):
         return self.should_contain_attribute(self._server,key,val,alias)
