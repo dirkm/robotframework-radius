@@ -104,7 +104,7 @@ class RadiusLibrary(object):
                                     dict=client['dictionary'])
             client['request'].get_connection(str(pkt.id))
 
-            self.builtin.log(pkt.code)
+            self.builtin.log(pkt.items)
             if pkt.code != code:
                 self.builtin.log('Expected {0}, received {1}'.format(code, pkt.code))
                 raise Exception("received {}".format(pkt.code))
@@ -119,7 +119,7 @@ class RadiusLibrary(object):
 
     def receive_access_reject(self, alias=None, timeout=1):
         """Receives access accept"""
-        return self.receive_response(alias, packet.AccessAccept, timeout)
+        return self.receive_response(alias, packet.AccessReject, timeout)
 
     def receive_accounting_response(self, alias=None, timeout=1):
         """Receives access accept"""
@@ -244,13 +244,13 @@ class RadiusLibrary(object):
             if str(key) in request:
                 return True
             else:
-                raise BaseException()
+                raise BaseException('key not found')
         else:
 
             if str(key) in request and val in request[str(key)]:
                 return
             else:
-                raise BaseException()
+                raise BaseException('value not found')
 
     def request_should_contain_attribute(self, key, val=None, alias=None):
         return self.should_contain_attribute(self._server,key,val,alias)
