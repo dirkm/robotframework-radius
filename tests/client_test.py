@@ -1,6 +1,6 @@
 import unittest
 import mock
-from RadiusLibrary import RadiusLibrary, AuthPacketAdapter
+from RadiusLibrary import RadiusLibrary
 import pyrad
 
 class Auth(unittest.TestCase):
@@ -41,6 +41,11 @@ class Auth(unittest.TestCase):
         self.radius.add_request_attribute(u'User-Name','user2')
         self.assertEqual(req['User-Name'],['user1','user2'])
 
+    def test_add_request_encrypt(self):
+        req = self.radius.create_access_request()
+        self.radius.add_request_attribute(u'User-Name',u'user1')
+        self.radius.add_request_attribute(u'User-Password',u'passwd',crypt=False)
+        self.assertEqual(req['User-Password'],[u'passwd'])
     def test_client_send(self):
         req = self.radius.create_access_request()
         self.radius.add_request_attribute(u'User-Name',u'user1')
@@ -58,10 +63,13 @@ class Auth(unittest.TestCase):
         self.radius.add_request_attribute(u'User-Name',u'user1')
         send_req = self.radius.send_request()
         server_req = self.radius.receive_access_request()
+        self.radius.request_should_contain_attribute('User-Name')
         self.radius.create_access_accept()
         self.radius.add_response_attribute('Framed-IP-Address','192.168.121.1')
         self.radius.send_response()
         self.radius.receive_access_accept()
+        self.radius.response_should_contain_attribute('Framed-IP-Address')
+        self.radius.response_should_contain_attribute('Framed-IP-Address','192.168.121.1')
 
 class Acct(unittest.TestCase):
     def setUp(self):

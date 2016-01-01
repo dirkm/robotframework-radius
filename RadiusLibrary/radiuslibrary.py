@@ -14,106 +14,6 @@ from robot.libraries.BuiltIn import BuiltIn
 #        self.secret = secret
 #        self.raddict =  dictionary.Dictionary(raddict)
 #        self.close = self._sock.close
-
-class BasePacketAdapter(object):
-    def __setitem__(self, key, val):
-        return self.packet.__setitem__(key,val)
-
-    def __getattr__(self, attr):
-        """Everything else is delegated to the object"""
-        return getattr(self.packet, attr)
-
-class AcctPacketAdapter(BasePacketAdapter):
-    def __init__(self, **kwargs):
-        if 'packet' in kwargs:
-            pkt = packet.AcctPacket(secret=kwargs['secret'],dict=kwargs['dict'],packet=kwargs['packet'])
-        else:
-            pkt = packet.AcctPacket(code=kwargs.get('code',0),secret=kwargs['secret'],dict=kwargs['dict'])
-
-        for key, value in kwargs.items():
-            if key in ['code','dict','secret','packet']:
-                continue
-            else:
-                dict_values = kwargs['dict'].attributes[str(key)].values
-                value_type = kwargs['dict'].attributes[str(key)].type
-                if not isinstance(value,list):
-                    print "no instance list {}".format(value)
-                    value = [value]
-                    print "no instance list {}".format(value)
-
-                for val in value:
-                #value_encrypt = kwargs['dict'].attributes[str(key)].encrypt
-                    if value_type == 'string' and not dict_values:
-                        value = str(value)
-                    elif value_type == 'integer' and not dict_values:
-                        value = int(value)
-
-                    pkt.AddAttribute(key, val)
-
-        print pkt
-        self.packet = pkt
-
-    def __getitem__(self,key):
-        #encrypt = self.packet.dict.attributes[key].encrypt
-        #value_type = self.packet.dict.attributes[key].type
-        print key
-        #key = self.packet.dict.attrindex.GetForward(key)
-        #if encrypt == 1:
-        #    return  [self.packet.PwDecrypt(v) for v in self.packet[key]]
-        #elif encrypt == 2 and value_type == 'integer':
-        #    return [tools.DecodeInteger(k) for k in self.packet[key]]
-        #else:
-        #    return self.packet[key]
-        return self.packet[str(key)]
-
-class AuthPacketAdapter(BasePacketAdapter):
-    "ada"
-    def __init__(self, **kwargs):
-        if 'packet' in kwargs:
-            pkt = packet.AuthPacket(secret=kwargs['secret'],dict=kwargs['dict'],packet=kwargs['packet'])
-        else:
-            pkt = packet.AuthPacket(code=kwargs.get('code',0),secret=kwargs['secret'],dict=kwargs['dict'])
-
-        for key, value in kwargs.items():
-            print key, value
-            if key in ['code','dict','secret','packet']:
-                continue
-            else:
-                value_type = kwargs['dict'].attributes[str(key)].type
-                value_encrypt = kwargs['dict'].attributes[str(key)].encrypt
-                if not isinstance(value,list):
-                    print "no instance list {}".format(value)
-                    value = [value]
-                    print "no instance list {}".format(value)
-
-                for val in value:
-                    print "val listitem: {}".format(val)
-                    if value_type == 'string':
-                        val = str(val)
-                    elif value_type == 'integer':
-                        val = int(val)
-
-                    if value_encrypt == 1:
-                        val = pkt.PwCrypt(val)
-                    print "val before adding {}".format(val)
-                    print pkt
-                    pkt.AddAttribute(str(key), val)
-                    print pkt
-        self.packet = pkt
-
-    def __getitem__(self,key):
-        encrypt = self.packet.dict.attributes[key].encrypt
-        value_type = self.packet.dict.attributes[key].type
-        key = self.packet.dict.attrindex.GetForward(key)
-
-        if encrypt == 1:
-            return  [self.packet.PwDecrypt(v) for v in self.packet[key]]
-        elif encrypt == 2 and value_type == 'integer':
-            return [tools.DecodeInteger(k) for k in self.packet[key]]
-        else:
-            print "will retutn {}".format(self.packet[key])
-            return self.packet[key]
-
 class RadiusLibrary(object):
     """Main Class"""
 
@@ -150,6 +50,7 @@ class RadiusLibrary(object):
     def create_access_request(self,alias=None):
         client = self._get_session(self._client,alias)
         request = packet.AuthPacket(code=packet.AccessRequest,secret=client['secret'],dict=client['dictionary'])
+        #request.authenticator = packet.Packet.CreateAuthenticator()
         client['request'].register(request, str(request.id))
         return request
 
@@ -160,10 +61,12 @@ class RadiusLibrary(object):
         return request
 
     ### Request sesction
-    def add_request_attribute(self, key, value, alias=None):
+    def add_request_attribute(self, key, value, alias=None,crypt=False):
         key = str(key)
         client = self._get_session(self._client,alias)
         request = client['request'].get_connection(alias)
+        if crypt:
+            value = request.PwCrypt(value)
         request.AddAttribute(key,value)
 
     def send_request(self, alias=None):
@@ -190,117 +93,65 @@ class RadiusLibrary(object):
         server['sock'].sendto(pdu, request.addr)
         return request
 
+    def receive_response(self,alias,code,timeout):
+        client = self._get_session(self._client, alias)
+        ready = select.select([client['sock']], [], [], float(timeout))
+
+        pkt = None
+        if ready[0]:
+            data, addr = client['sock'].recvfrom(1024)
+            pkt = packet.Packet(secret=client['secret'], packet=data,
+                                    dict=client['dictionary'])
+            client['request'].get_connection(str(pkt.id))
+
+            self.builtin.log(pkt.code)
+            if pkt.code != code:
+                self.builtin.log('Expected {0}, received {1}'.format(code, pkt.code))
+                raise Exception("received {}".format(pkt.code))
+        if pkt is None:
+            raise Exception("Did not receive any answer")
+
+        return pkt
 
     def receive_access_accept(self, alias=None, timeout=1):
         """Receives access accept"""
-        client = self._get_session(self._client, alias)
-        ready = select.select([client['sock']], [], [], float(timeout))
-
-        pkt = None
-        if ready[0]:
-            data, addr = client['sock'].recvfrom(1024)
-
-            pkt = AuthPacketAdapter(secret=client['secret'], packet=data,
-                                    dict=client['dictionary'])
-            client['request'].get_connection(str(pkt.id))
-
-            self.builtin.log(pkt.code)
-            if pkt.code != packet.AccessAccept:
-                self.builtin.log('Expected {0}, received {1}'.format(packet.AccessRequest, pkt.code))
-                raise Exception("received {}".format(pkt.code))
-        if pkt is None:
-            raise Exception("Did not receive any answer")
-
-        return pkt
-
-    def receive_accounting_response(self, alias=None, timeout=1):
-        """Receives access accept"""
-        client = self._get_session(self._client, alias)
-        ready = select.select([client['sock']], [], [], float(timeout))
-
-        pkt = None
-        if ready[0]:
-            data, addr = client['sock'].recvfrom(1024)
-
-            pkt = AuthPacketAdapter(secret=client['secret'], packet=data,
-                                    dict=client['dictionary'])
-            client['request'].get_connection(str(pkt.id))
-
-            self.builtin.log(pkt.code)
-            if pkt.code != packet.AccountingResponse:
-                self.builtin.log('Expected {0}, received {1}'.format(packet.AccessRequest, pkt.code))
-                raise Exception("received {}".format(pkt.code))
-        if pkt is None:
-            raise Exception("Did not receive any answer")
-
-        return pkt
+        return self.receive_response(alias, packet.AccessAccept, timeout)
 
     def receive_access_reject(self, alias=None, timeout=1):
         """Receives access accept"""
-        client = self._get_session(self._client, alias)
-        ready = select.select([client['sock']], [], [], float(timeout))
+        return self.receive_response(alias, packet.AccessAccept, timeout)
+
+    def receive_accounting_response(self, alias=None, timeout=1):
+        """Receives access accept"""
+        return self.receive_response(alias, packet.AccountingResponse, timeout)
+
+    def receive_request(self,alias,code,timeout):
+        server = self._get_session(self._server, alias)
+        ready = select.select([server['sock']], [], [], float(timeout))
 
         pkt = None
         if ready[0]:
-            data, addr = client['sock'].recvfrom(1024)
-
-            pkt = AuthPacketAdapter(secret=client['secret'], packet=data,
-                                    dict=client['dictionary'])
-            client['request'].get_connection(str(pkt.id))
+            data, addr = server['sock'].recvfrom(1024)
+            pkt = packet.Packet(secret=server['secret'], packet=data,
+                                    dict=server['dictionary'])
+            server['request'].register(pkt,str(pkt.id))
 
             self.builtin.log(pkt.code)
-            if pkt.code != packet.AccessAccept:
-                self.builtin.log('Expected {0}, received {1}'.format(packet.AccessRequest, pkt.code))
+            if pkt.code != code:
+                self.builtin.log('Expected {0}, received {1}'.format(code, pkt.code))
                 raise Exception("received {}".format(pkt.code))
         if pkt is None:
             raise Exception("Did not receive any answer")
-
+        pkt.addr = addr
         return pkt
 
     def receive_accounting_request(self, alias=None, timeout=1):
         """Receives access request"""
-        server = self._get_session(self._server, alias)
-        ready = select.select([server['sock']], [], [], float(timeout))
-
-        pkt = None
-        if ready[0]:
-            data, addr = server['sock'].recvfrom(1024)
-
-            pkt = packet.AcctPacket(secret=server['secret'], packet=data,
-                                    dict=server['dictionary'])
-            server['request'].register(pkt, str(pkt.id))
-            pkt.addr = addr
-            self.builtin.log(pkt.code)
-            if pkt.code != packet.AccountingRequest:
-                self.builtin.log('Expected {0}, received {1}'.format(packet.AccessRequest, pkt.code))
-                raise Exception("received {}".format(pkt.code))
-        if pkt is None:
-            raise Exception("Did not receive any answer")
-
-        return pkt
+        return self.receive_request(alias, packet.AccountingRequest, timeout)
 
     def receive_access_request(self, alias=None, timeout=1):
         """Receives access request"""
-        server = self._get_session(self._server, alias)
-        ready = select.select([server['sock']], [], [], float(timeout))
-
-        pkt = None
-        if ready[0]:
-            data, addr = server['sock'].recvfrom(1024)
-
-            pkt = AuthPacketAdapter(secret=server['secret'], packet=data,
-                                    dict=server['dictionary'])
-            server['request'].register(pkt, str(pkt.id))
-            pkt.addr = addr
-            self.builtin.log(pkt.code)
-            if pkt.code != packet.AccessRequest:
-                self.builtin.log('Expected {0}, received {1}'.format(packet.AccessRequest, pkt.code))
-                raise Exception("received {}".format(pkt.code))
-        if pkt is None:
-            raise Exception("Did not receive any answer")
-
-        return pkt
-
+        return self.receive_request(alias, packet.AccessRequest, timeout)
 
     def _get_session(self, cache, alias):
         # Switch to related client alias
@@ -308,24 +159,6 @@ class RadiusLibrary(object):
             return cache.switch(alias)
         else:
             return cache.get_connection()
-
-    def send_access_request(self, alias=None, **attributes):
-        session=self._get_session(self._client,alias)
-        print session
-        print attributes
-        self.builtin.log(attributes)
-        pkt = AuthPacketAdapter(code=packet.AccessRequest,
-                                secret=session['secret'],
-                                dict=session['dictionary'],
-                                **attributes)
-
-        session['request'].register(pkt, str(pkt.id))
-        pkt.authenticator = pkt.CreateAuthenticator()
-
-        pdu = pkt.RequestPacket()
-
-        session['sock'].sendto(pdu, (session['address'], session['port']))
-        return pkt
 
     def create_accounting_response(self, alias=None):
         """Send Response"""
@@ -358,7 +191,7 @@ class RadiusLibrary(object):
     def send_accounting_request(self, alias=None, **attributes):
         session=self._get_session(self._client, alias)
 
-        pkt = AcctPacketAdapter(code=packet.AccountingRequest, secret=session['secret'],
+        pkt = packet.AcctPacket(code=packet.AccountingRequest, secret=session['secret'],
                                 dict=session['dictionary'], **attributes)
 
         pkt.authenticator = pkt.CreateAuthenticator()
@@ -378,49 +211,6 @@ class RadiusLibrary(object):
         pdu = reply_pkt.ReplyPacket()
         session['sock'].sendto(pdu, pkt.addr)
         return reply_pkt
-
-    def _receive_auth(self,session, code, timeout):
-        ready = select.select([session['sock']], [], [], float(timeout))
-        pkt = None
-        if ready[0]:
-            data, addr = session['sock'].recvfrom(1024)
-
-            pkt = AuthPacketAdapter(secret=session['secret'], packet=data,
-                                    dict=session['dictionary'])
-            session['request'].register(pkt, str(pkt.id))
-            pkt.addr = addr
-            self.builtin.log(pkt.code)
-            if pkt.code != code:
-                self.builtin.log('Expected {0}, received {1}'.format(code, pkt.code))
-                raise Exception("received {}".format(pkt.code))
-        if pkt is None:
-            raise Exception("Did not receive any answer")
-
-        return pkt
-
-    def _receive_acct(self,session, code, timeout, **attributes):
-        ready = select.select([session['sock']], [], [], float(timeout))
-        pkt = None
-        if ready[0]:
-            data, addr = session['sock'].recvfrom(1024)
-
-            pkt = AcctPacketAdapter(secret=session['secret'], packet=data,
-                                    dict=session['dictionary'])
-            for key,value in attributes.items():
-                if pkt[key] != value:
-
-                    raise BaseException('{} != {}'.format(pkt[key],value))
-
-            session['request'].register(pkt, str(pkt.id))
-            pkt.addr = addr
-            self.builtin.log(pkt.code)
-            if pkt.code != code:
-                self.builtin.log('Expected {0}, received {1}'.format(code, pkt.code))
-                raise Exception("received {}".format(pkt.code))
-        if pkt is None:
-            raise Exception("Did not receive any answer")
-
-        return pkt
 
 
     #def create_server(self, alias=u'default', address='127.0.0.1', port=0, secret='secret', raddict='dictionary'):
@@ -447,22 +237,23 @@ class RadiusLibrary(object):
         session['sock'].close()
         self._server.empty_cache()
 
-    def should_contain_attribute(self, pckt, key=None, val=None):
-        """Test if attribute exists"""
-        if pckt.dict.attrindex.HasBackward(key):
-            numkey = pckt.dict.attrindex.GetBackward(key)
-        elif pckt.dict.attrindex.HasForward(key):
-            numkey = pckt.dict.attrindex.GetForward(key)
-        elif isinstance(key,int):
-            numkey = int(key)
+    def should_contain_attribute(self,cache,key,val,alias):
+        session=self._get_session(cache, alias)
+        request = session['request'].get_connection(alias)
+        if not val:
+            if str(key) in request:
+                return True
+            else:
+                raise BaseException()
+        else:
 
-        if key and not val:
-            return pckt[numkey]
-
-        elif key and val:
-            if val in pckt[key.encode('ascii')]:
+            if str(key) in request and val in request[str(key)]:
                 return
             else:
-                raise BaseException('value "{}" does not contain: {}'.format(pckt[key.encode('ascii')],val))
-        else:
-            raise BaseException('invalid arguments')
+                raise BaseException()
+
+    def request_should_contain_attribute(self, key, val=None, alias=None):
+        return self.should_contain_attribute(self._server,key,val,alias)
+
+    def response_should_contain_attribute(self, key, val=None, alias=None):
+        return self.should_contain_attribute(self._client,key,val,alias)

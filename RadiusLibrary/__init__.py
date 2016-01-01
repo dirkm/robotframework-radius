@@ -1,3 +1,1 @@
 from RadiusLibrary.radiuslibrary import RadiusLibrary
-from RadiusLibrary.radiuslibrary import AuthPacketAdapter
-from RadiusLibrary.radiuslibrary import AcctPacketAdapter
