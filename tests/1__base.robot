@@ -1,38 +1,9 @@
 *** Settings ***
-Test Setup        Setup Client And Server
 Library           RadiusLibrary
 Library           Collections
 Library           DateTime
 
 *** test cases ***
 Request Response Requests Should Pass
-    ${req_attr}=    Create Dictionary    User-Name=testuser
-    ${client_req}=    Send Request    client    AccessRequest    ${req_attr}
-    ${server_req}=    Receive Request    server    AccessRequest
-    Should Contain Attribute    ${server_req}    User-Name
-    Should Contain Attribute    ${server_req}    key=User-Name
-    Should Contain Attribute    ${server_req}    key=User-Name    val=testuser
-    Run Keyword And Expect Error    *    Should Contain Attribute    ${server_req}    key=User-Name    val=wronguser
-    Should Contain Attribute    ${server_req}    User-Name    val=testuser
-    Send Response    server    ${server_req}    AccessAccept
-    Receive Response    client    AccessAccept
-    Destroy Server    server
-
-Server Recreation Should not fail
-    Destroy Server    server
-    Create Server    server    127.0.0.1    11812    secret=mysecret    raddict=dictionary
-
-Client multiple Class attributes should pass
-    ${class1}=    Convert To Bytes    KW20MB
-    ${class2}=    Convert To Bytes    KW30MB
-    ${class_list}=    Create List    ${class1}    ${class2}
-    ${req_attr}=    Create Dictionary    Class=${class_list}
-    ${client_req}=    Send Request    client    AccessRequest    ${req_attr}
-    ${server_req}=    Receive Request    server    AccessRequest
-    Should Contain Attribute    ${server_req}    key=Class    val=${class1}
-    Should Contain Attribute    ${server_req}    Class    ${class2}
-
-*** Keywords ***
-Setup Client And Server
-    Create Client    client    127.0.0.1    11812    mysecret    raddict=dictionary
-    Create Server    server    127.0.0.1    11812    secret=mysecret    raddict=dictionary
+    Create Client    auth    127.0.0.1    1812    bras1001    dictionary
+    ${req}= 	Send Access Request    User-Name=mike
