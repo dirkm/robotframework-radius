@@ -2,6 +2,7 @@ import unittest
 import mock
 from RadiusLibrary import RadiusLibrary
 import pyrad
+import pyrad.packet
 
 class Auth(unittest.TestCase):
     def setUp(self):
@@ -117,6 +118,14 @@ class Acct(unittest.TestCase):
         #print resp['Framed-IP-Address']
         self.radius.send_response()
         self.radius.receive_accounting_response()
+
+
+    def test_coa_request(self):
+        req = self.radius.create_coa_request()
+        self.radius.add_request_attribute(u'User-Name',u'user1')
+        self.radius.add_request_attribute('Acct-Session-Id', '20')
+        self.assertEqual(req.code, pyrad.packet.CoARequest)
+
 #    def test_send(self):
 #        attributes = {u'User-Name': u'user'}
 #        pkt = self.radius.send_access_request(**attributes)

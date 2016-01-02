@@ -56,6 +56,13 @@ class RadiusLibrary(object):
         client['request'].register(request, str(request.id))
         return request
 
+    def create_coa_request(self,alias=None):
+        client = self._get_session(self._client,alias)
+        request = packet.AcctPacket(code=packet.CoARequest,secret=client['secret'],dict=client['dictionary'])
+        #request.authenticator = packet.Packet.CreateAuthenticator()
+        client['request'].register(request, str(request.id))
+        return request
+
     def create_accounting_request(self,alias=None):
         client = self._get_session(self._client,alias)
         request = packet.AcctPacket(code=packet.AccountingRequest,secret=client['secret'],dict=client['dictionary'])
@@ -168,6 +175,34 @@ class RadiusLibrary(object):
             return cache.switch(alias)
         else:
             return cache.get_connection()
+
+    def create_coa_ack(self, alias=None):
+        """Send Response"""
+        session = self._get_session(self._server,alias)
+        request = session['request'].get_connection(alias)
+
+        reply = request.CreateReply()
+        reply.code = packet.CoAAck
+
+        pdu = reply.ReplyPacket()
+        session['sock'].sendto(pdu, request.addr)
+        session['response'].register(reply,str(reply.code))
+        #todo: deregister request
+        return reply
+
+    def create_coa_nack(self, alias=None):
+        """Send Response"""
+        session = self._get_session(self._server,alias)
+        request = session['request'].get_connection(alias)
+
+        reply = request.CreateReply()
+        reply.code = packet.CoANack
+
+        pdu = reply.ReplyPacket()
+        session['sock'].sendto(pdu, request.addr)
+        session['response'].register(reply,str(reply.code))
+        #todo: deregister request
+        return reply
 
     def create_accounting_response(self, alias=None):
         """Send Response"""
