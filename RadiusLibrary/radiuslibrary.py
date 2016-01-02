@@ -67,6 +67,8 @@ class RadiusLibrary(object):
         key = str(key)
         client = self._get_session(self._client,alias)
         request = client['request'].get_connection(alias)
+        attr_dict_item = request.dict.attributes[key]
+
         if crypt:
             value = request.PwCrypt(value)
         request.AddAttribute(key,value)
@@ -194,7 +196,7 @@ class RadiusLibrary(object):
         pkt = packet.AcctPacket(code=packet.AccountingRequest, secret=session['secret'],
                                 dict=session['dictionary'], **attributes)
 
-        pkt.authenticator = pkt.CreateAuthenticator()
+        #pkt.authenticator = pkt.CreateAuthenticator()
         pdu = pkt.RequestPacket()
 
         session['request'].register(pkt, str(pkt.id))
