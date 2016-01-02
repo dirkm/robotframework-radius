@@ -14,6 +14,8 @@ from robot.libraries.BuiltIn import BuiltIn
 #        self.secret = secret
 #        self.raddict =  dictionary.Dictionary(raddict)
 #        self.close = self._sock.close
+TIMEOUT = 15.0
+
 class RadiusLibrary(object):
     """Main Class"""
 
@@ -105,15 +107,15 @@ class RadiusLibrary(object):
         return request
 
 
-    def receive_access_accept(self, alias=None, timeout=1):
+    def receive_access_accept(self, alias=None, timeout=TIMEOUT):
         """Receives access accept"""
         return self.receive_response(alias, packet.AccessAccept, timeout)
 
-    def receive_access_reject(self, alias=None, timeout=1):
+    def receive_access_reject(self, alias=None, timeout=TIMEOUT):
         """Receives access accept"""
         return self.receive_response(alias, packet.AccessReject, timeout)
 
-    def receive_accounting_response(self, alias=None, timeout=1):
+    def receive_accounting_response(self, alias=None, timeout=TIMEOUT):
         """Receives access accept"""
         return self.receive_response(alias, packet.AccountingResponse, timeout)
 
@@ -157,15 +159,15 @@ class RadiusLibrary(object):
 
         return pkt
 
-    def receive_accounting_request(self, alias=None, timeout=1):
+    def receive_accounting_request(self, alias=None, timeout=TIMEOUT):
         """Receives access request"""
         return self.receive_request(alias, packet.AccountingRequest, timeout)
 
-    def receive_coa_request(self, alias=None, timeout=1):
+    def receive_coa_request(self, alias=None, timeout=TIMEOUT):
         """Receives access request"""
         return self.receive_request(alias, packet.CoARequest, timeout)
 
-    def receive_access_request(self, alias=None, timeout=1):
+    def receive_access_request(self, alias=None, timeout=TIMEOUT):
         """Receives access request"""
         return self.receive_request(alias, packet.AccessRequest, timeout)
 

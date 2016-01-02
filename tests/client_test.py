@@ -107,6 +107,8 @@ class Acct(unittest.TestCase):
         self.radius.add_request_attribute(u'User-Name',u'user1')
         send_req = self.radius.send_request()
         server_req = self.radius.receive_accounting_request()
+        send_req = self.radius.send_request()
+        server_req = self.radius.receive_accounting_request()
 
     def test_server_response(self):
         req = self.radius.create_accounting_request()
@@ -126,6 +128,14 @@ class Acct(unittest.TestCase):
         self.radius.add_request_attribute('Acct-Session-Id', '20')
         self.assertEqual(req.code, pyrad.packet.CoARequest)
 
+    def test_coa_req_receive(self):
+        req = self.radius.create_coa_request()
+        self.radius.add_request_attribute(u'User-Name',u'user1')
+        self.radius.add_request_attribute('Acct-Session-Id', '20')
+        self.assertEqual(req.code, pyrad.packet.CoARequest)
+        self.radius.send_request()
+        req_recv = self.radius.receive_coa_request()
+        self.radius.request_should_contain_attribute(u'User-Name')
 #    def test_send(self):
 #        attributes = {u'User-Name': u'user'}
 #        pkt = self.radius.send_access_request(**attributes)
