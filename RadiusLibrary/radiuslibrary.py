@@ -293,7 +293,7 @@ class RadiusLibrary(object):
             if str(key) in request:
                 return True
             else:
-                raise BaseException('Key {} not found in {}'.format(key,str(request)))
+                raise BaseException('Key {} not found in {}'.format(key,str(request.keys())))
         else:
 
             if str(key) in request and val in request[str(key)]:
