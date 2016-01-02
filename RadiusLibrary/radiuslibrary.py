@@ -154,6 +154,10 @@ class RadiusLibrary(object):
         """Receives access request"""
         return self.receive_request(alias, packet.AccountingRequest, timeout)
 
+    def receive_coa_request(self, alias=None, timeout=1):
+        """Receives access request"""
+        return self.receive_request(alias, packet.CoARequest, timeout)
+
     def receive_access_request(self, alias=None, timeout=1):
         """Receives access request"""
         return self.receive_request(alias, packet.AccessRequest, timeout)
