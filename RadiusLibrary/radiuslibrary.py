@@ -58,7 +58,7 @@ class RadiusLibrary(object):
 
     def create_accounting_request(self,alias=None):
         client = self._get_session(self._client,alias)
-        request = packet.AuthPacket(code=packet.AccountingRequest,secret=client['secret'],dict=client['dictionary'])
+        request = packet.AcctPacket(code=packet.AccountingRequest,secret=client['secret'],dict=client['dictionary'])
         client['request'].register(request, str(request.id))
         return request
 
