@@ -153,7 +153,7 @@ class RadiusLibrary(object):
                 self.builtin.log('Expected {0}, received {1}'.format(code, pkt.code))
                 raise Exception("received {}".format(pkt.code))
         if pkt is None:
-                raise Exception("Did not receive any answer")
+            raise Exception("Did not receive any answer")
 
         return pkt
 
@@ -182,7 +182,7 @@ class RadiusLibrary(object):
         request = session['request'].get_connection(alias)
 
         reply = request.CreateReply()
-        reply.code = packet.CoAAck
+        reply.code = packet.CoAACK
 
         pdu = reply.ReplyPacket()
         session['sock'].sendto(pdu, request.addr)
@@ -196,7 +196,7 @@ class RadiusLibrary(object):
         request = session['request'].get_connection(alias)
 
         reply = request.CreateReply()
-        reply.code = packet.CoANack
+        reply.code = packet.CoANACK
 
         pdu = reply.ReplyPacket()
         session['sock'].sendto(pdu, request.addr)
