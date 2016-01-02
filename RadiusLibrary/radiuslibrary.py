@@ -198,7 +198,7 @@ class RadiusLibrary(object):
         request = session['request'].get_connection(alias)
 
         reply = request.CreateReply()
-        reply.code = packet.CoANACK
+        reply.code = packet.CoANAK
 
         pdu = reply.ReplyPacket()
         session['sock'].sendto(pdu, request.addr)
