@@ -6,15 +6,8 @@ import six
 import robot
 from robot.libraries.BuiltIn import BuiltIn
 
-#class ClientConnection:
-#    def __init__(self,sock,address,port,secret,raddict):
-#        self._sock = sock
-#        self.address = address
-#        self.port = port
-#        self.secret = secret
-#        self.raddict =  dictionary.Dictionary(raddict)
-#        self.close = self._sock.close
 TIMEOUT = 15.0
+DEFAULT_DICT = ['/usr/share/freeradius/dictionary.rfc2865','/usr/share/freeradius/dictionary.rfc2865']
 
 class RadiusLibrary(object):
     """Main Class"""
@@ -30,7 +23,7 @@ class RadiusLibrary(object):
 
 
     def create_client(self, alias, address, port,
-                      secret, raddict='dictionary',
+                      secret, raddict=DEFAULT_DICT,
                       authenticator=True):
         """Creates client"""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -256,8 +249,7 @@ class RadiusLibrary(object):
         return reply_pkt
 
 
-    #def create_server(self, alias=u'default', address='127.0.0.1', port=0, secret='secret', raddict='dictionary'):
-    def create_server(self, alias=None, address='127.0.0.1', port=0, secret='secret', raddict='dictionary'):
+    def create_server(self, alias=None, address='127.0.0.1', port=0, secret='secret', raddict=DEFAULT_DICT):
         """Creates Radius Server"""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
