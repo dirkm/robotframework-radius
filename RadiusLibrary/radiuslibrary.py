@@ -7,7 +7,7 @@ import robot
 from robot.libraries.BuiltIn import BuiltIn
 
 TIMEOUT = 15.0
-DEFAULT_DICT = ['/usr/share/freeradius/dictionary.rfc2865','/usr/share/freeradius/dictionary.rfc2865']
+DEFAULT_DICT = 'dictionary'
 
 class RadiusLibrary(object):
     """Main Class"""
