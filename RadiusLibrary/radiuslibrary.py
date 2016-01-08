@@ -180,7 +180,7 @@ class RadiusLibrary(object):
         reply.code = packet.CoAACK
 
         pdu = reply.ReplyPacket()
-        session['sock'].sendto(pdu, request.addr)
+        #session['sock'].sendto(pdu, request.addr)
         session['response'].register(reply,str(reply.code))
         #todo: deregister request
         return reply
@@ -194,7 +194,7 @@ class RadiusLibrary(object):
         reply.code = packet.CoANAK
 
         pdu = reply.ReplyPacket()
-        session['sock'].sendto(pdu, request.addr)
+        #session['sock'].sendto(pdu, request.addr)
         session['response'].register(reply,str(reply.code))
         #todo: deregister request
         return reply
