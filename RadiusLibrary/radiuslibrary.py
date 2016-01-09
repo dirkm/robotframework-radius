@@ -21,7 +21,6 @@ class RadiusLibrary(object):
 
         self.builtin = BuiltIn()
 
-
     def create_client(self, alias, address, port,
                       secret, raddict=DEFAULT_DICT,
                       authenticator=True):
@@ -82,9 +81,6 @@ class RadiusLibrary(object):
         client['sock'].sendto(pdu, (client['address'], client['port']))
         return dict(request)
 
-    ### Auth request section
-
-
     def add_response_attribute(self, key, value, alias=None):
         key = str(key)
         server = self._get_session(self._server,alias)
@@ -98,7 +94,6 @@ class RadiusLibrary(object):
         pdu =  response.ReplyPacket()
         server['sock'].sendto(pdu, request.addr)
         return request
-
 
     def receive_access_accept(self, alias=None, timeout=TIMEOUT):
         """Receives access accept"""
