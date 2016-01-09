@@ -24,7 +24,14 @@ class RadiusLibrary(object):
     def create_client(self, alias, address, port,
                       secret, raddict=DEFAULT_DICT,
                       authenticator=True):
-        """Creates client"""
+        """ Create Session: create a HTTP session to a server
+        `alias` Robot Framework alias to identify the session
+        `address` IP address of the RADIUS server
+        `port` IP port of the RADIUS server
+        `secret` RADIUS secret
+        `raddict` Path to RADIUS dictionary
+        `authenticator` set to True to enable authenticator
+        """
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(('', 0))
         sock.settimeout(3.0)
