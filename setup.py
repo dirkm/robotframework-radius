@@ -13,5 +13,4 @@ setup(name='robotframework-radius',
         "robotframework",
         "pyrad",
     ],
-
-     )
+ )
