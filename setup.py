@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from setuptools import setup
 
-
 setup(name='robotframework-radius',
       version='0.1.0',
       description='Robotframework RADIUS library',
