@@ -55,7 +55,7 @@ class Auth(unittest.TestCase):
 
     def test_add_request_encrypted_attribute(self):
         req = self.radius.create_access_request()
-        self.radius.add_request_attribute(u'User-Password',u'passwd',crypt=True)
+        self.radius.add_request_attribute(u'User-Password',u'passwd')
         self.assertEqual(req.PwDecrypt(req[2].pop()),'passwd')
 
     def test_send_request(self):

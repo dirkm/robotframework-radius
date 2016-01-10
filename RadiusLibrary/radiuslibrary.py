@@ -66,10 +66,17 @@ class RadiusLibrary(object):
 
     def create_request(self, alias, code):
         client = self._get_session(self._client,alias)
+        secret = client['secret']
+        dictionary = client['dictionary']
+
         if code == packet.AccessRequest:
-          request = packet.AuthPacket(code=code,secret=client['secret'],dict=client['dictionary'])
+          request = packet.AuthPacket(code=code, secret=secret,
+                                      dict=dictionary)
+
         elif code in [packet.AccountingRequest, packet.CoARequest]:
-          request = packet.AcctPacket(code=code,secret=client['secret'],dict=client['dictionary'])
+          request = packet.AcctPacket(code=code, secret=secret,
+                                      dict=dictionary)
+
         client['request'].register(request, str(request.id))
         return request
 
@@ -82,7 +89,7 @@ class RadiusLibrary(object):
     def create_coa_request(self,alias=None):
         return self.create_request(alias,packet.CoARequest)
 
-    def add_attribute(self, cache, key, value, alias, crypt):
+    def add_attribute(self, cache, key, value, alias):
         key = str(key)
         client = self._get_session(cache,alias)
         if cache == self._client:
@@ -95,12 +102,12 @@ class RadiusLibrary(object):
             value = int(value)
         elif attr_dict_item.type == 'string':
             value = str(value)
-        if crypt:
+        if attr_dict_item.encrypt == 1:
             value = packet.PwCrypt(value)
         packet.AddAttribute(key,value)
 
-    def add_request_attribute(self, key, value, alias=None,crypt=False):
-        return self.add_attribute(self._client, key, value, alias, crypt)
+    def add_request_attribute(self, key, value, alias=None):
+        return self.add_attribute(self._client, key, value, alias)
 
     def send_request(self, alias=None):
         client = self._get_session(self._client,alias)
@@ -217,8 +224,8 @@ class RadiusLibrary(object):
         """Send Response"""
         return self.create_response(alias,packet.CoANAK)
 
-    def add_response_attribute(self, key, value, alias=None, crypt=False):
-        return self.add_attribute(self._server, key, value, alias, crypt)
+    def add_response_attribute(self, key, value, alias=None):
+        return self.add_attribute(self._server, key, value, alias)
 
     def send_response(self, alias=None):
         server = self._get_session(self._server, alias)
