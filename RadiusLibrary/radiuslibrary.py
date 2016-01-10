@@ -14,12 +14,15 @@
 
 import select
 import socket
-from pyrad import packet, dictionary, tools
 import six
 import robot
 from robot.libraries.BuiltIn import BuiltIn
+from pyrad import packet, dictionary, tools
 
+# Default receive timeout
 TIMEOUT = 15.0
+
+# Default Radius dictionary file
 DEFAULT_DICT = 'dictionary'
 
 class RadiusLibrary(object):
