@@ -82,19 +82,25 @@ class RadiusLibrary(object):
     def create_coa_request(self,alias=None):
         return self.create_request(alias,packet.CoARequest)
 
-    def add_request_attribute(self, key, value, alias=None,crypt=False):
+    def add_attribute(self, cache, key, value, alias, crypt):
         key = str(key)
-        client = self._get_session(self._client,alias)
-        request = client['request'].get_connection(alias)
-        attr_dict_item = request.dict.attributes[key]
+        client = self._get_session(cache,alias)
+        if cache == self._client:
+          packet = client['request'].get_connection(alias)
+        if cache == self._server:
+          packet = client['response'].get_connection(alias)
+        attr_dict_item = packet.dict.attributes[key]
 
         if attr_dict_item.type == 'integer':
             value = int(value)
-        elif attr_dict_item.type == 'integer':
+        elif attr_dict_item.type == 'string':
             value = str(value)
         if crypt:
-            value = request.PwCrypt(value)
-        request.AddAttribute(key,value)
+            value = packet.PwCrypt(value)
+        packet.AddAttribute(key,value)
+
+    def add_request_attribute(self, key, value, alias=None,crypt=False):
+        return self.add_attribute(self._client, key, value, alias, crypt)
 
     def send_request(self, alias=None):
         client = self._get_session(self._client,alias)
@@ -211,11 +217,8 @@ class RadiusLibrary(object):
         """Send Response"""
         return self.create_response(alias,packet.CoANAK)
 
-    def add_response_attribute(self, key, value, alias=None):
-        key = str(key)
-        server = self._get_session(self._server,alias)
-        response = server['response'].get_connection(alias)
-        response.AddAttribute(key,value)
+    def add_response_attribute(self, key, value, alias=None, crypt=False):
+        return self.add_attribute(self._server, key, value, alias, crypt)
 
     def send_response(self, alias=None):
         server = self._get_session(self._server, alias)
@@ -243,37 +246,6 @@ class RadiusLibrary(object):
             return cache.switch(alias)
         else:
             return cache.get_connection()
-
-#    def create_coa_ack(self, alias=None):
-#        """Send Response"""
-#        session = self._get_session(self._server,alias)
-#        request = session['request'].get_connection(alias)
-#
-#        reply = request.CreateReply()
-#        reply.code = packet.CoAACK
-#
-#        pdu = reply.ReplyPacket()
-#        session['response'].register(reply,str(reply.code))
-#        #todo: deregister request
-#        return reply
-#
-#    def create_coa_nack(self, alias=None):
-#        """Send Response"""
-#        session = self._get_session(self._server,alias)
-#        request = session['request'].get_connection(alias)
-#
-#        reply = request.CreateReply()
-#        reply.code = packet.CoANAK
-#
-#        pdu = reply.ReplyPacket()
-#        session['response'].register(reply,str(reply.code))
-#        #todo: deregister request
-#        return reply
-
-    def destroy_server(self,alias):
-        session = self._server.switch(alias)
-        session['sock'].close()
-        self._server.empty_cache()
 
     def should_contain_attribute(self,cache,key,val,alias):
         session=self._get_session(cache, alias)
