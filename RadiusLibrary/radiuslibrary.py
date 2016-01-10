@@ -64,27 +64,24 @@ class RadiusLibrary(object):
         self._client.register(session, alias=alias)
         return session
 
-    def create_access_request(self,alias=None):
+    def create_request(self, alias, code):
         client = self._get_session(self._client,alias)
-        request = packet.AuthPacket(code=packet.AccessRequest,secret=client['secret'],dict=client['dictionary'])
-        #request.authenticator = packet.Packet.CreateAuthenticator()
+        if code == packet.AccessRequest:
+          request = packet.AuthPacket(code=code,secret=client['secret'],dict=client['dictionary'])
+        elif code in [packet.AccountingRequest, packet.CoARequest]:
+          request = packet.AcctPacket(code=code,secret=client['secret'],dict=client['dictionary'])
         client['request'].register(request, str(request.id))
         return request
 
-    def create_coa_request(self,alias=None):
-        client = self._get_session(self._client,alias)
-        request = packet.AcctPacket(code=packet.CoARequest,secret=client['secret'],dict=client['dictionary'])
-        #request.authenticator = packet.Packet.CreateAuthenticator()
-        client['request'].register(request, str(request.id))
-        return request
+    def create_access_request(self,alias=None):
+        return self.create_request(alias,packet.AccessRequest)
 
     def create_accounting_request(self,alias=None):
-        client = self._get_session(self._client,alias)
-        request = packet.AcctPacket(code=packet.AccountingRequest,secret=client['secret'],dict=client['dictionary'])
-        client['request'].register(request, str(request.id))
-        return request
+        return self.create_request(alias,packet.AccountingRequest)
 
-    ### Request sesction
+    def create_coa_request(self,alias=None):
+        return self.create_request(alias,packet.CoARequest)
+
     def add_request_attribute(self, key, value, alias=None,crypt=False):
         key = str(key)
         client = self._get_session(self._client,alias)
@@ -101,52 +98,6 @@ class RadiusLibrary(object):
         pdu =  request.RequestPacket()
         client['sock'].sendto(pdu, (client['address'], client['port']))
         return dict(request)
-
-    def add_response_attribute(self, key, value, alias=None):
-        key = str(key)
-        server = self._get_session(self._server,alias)
-        response = server['response'].get_connection(alias)
-        response.AddAttribute(key,value)
-
-    def send_response(self, alias=None):
-        server = self._get_session(self._server, alias)
-        request = server['request'].get_connection(alias)
-        response = server['response'].get_connection(alias)
-        pdu =  response.ReplyPacket()
-        server['sock'].sendto(pdu, request.addr)
-        return request
-
-    def receive_access_accept(self, alias=None, timeout=TIMEOUT):
-        """Receives access accept"""
-        return self.receive_response(alias, packet.AccessAccept, timeout)
-
-    def receive_access_reject(self, alias=None, timeout=TIMEOUT):
-        """Receives access accept"""
-        return self.receive_response(alias, packet.AccessReject, timeout)
-
-    def receive_accounting_response(self, alias=None, timeout=TIMEOUT):
-        """Receives access accept"""
-        return self.receive_response(alias, packet.AccountingResponse, timeout)
-
-    def receive_request(self,alias,code,timeout):
-        server = self._get_session(self._server, alias)
-        ready = select.select([server['sock']], [], [], float(timeout))
-
-        pkt = None
-        if ready[0]:
-            data, addr = server['sock'].recvfrom(1024)
-            pkt = packet.Packet(secret=server['secret'], packet=data,
-                                    dict=server['dictionary'])
-            server['request'].register(pkt,str(pkt.id))
-
-            self.builtin.log(pkt.code)
-            if pkt.code != code:
-                self.builtin.log('Expected {0}, received {1}'.format(code, pkt.code))
-                raise Exception("received {}".format(pkt.code))
-        if pkt is None:
-            raise Exception("Did not receive any answer")
-        pkt.addr = addr
-        return pkt
 
     def receive_response(self,alias,code,timeout):
         client = self._get_session(self._client, alias)
@@ -168,6 +119,108 @@ class RadiusLibrary(object):
 
         return pkt
 
+    def receive_access_accept(self, alias=None, timeout=TIMEOUT):
+        """Receives access accept"""
+        return self.receive_response(alias, packet.AccessAccept, timeout)
+
+    def receive_access_reject(self, alias=None, timeout=TIMEOUT):
+        """Receives access accept"""
+        return self.receive_response(alias, packet.AccessReject, timeout)
+
+    def receive_accounting_response(self, alias=None, timeout=TIMEOUT):
+        """Receives access accept"""
+        return self.receive_response(alias, packet.AccountingResponse, timeout)
+
+    def response_should_contain_attribute(self, key, val=None, alias=None):
+        return self.should_contain_attribute(self._client,key,val,alias)
+
+
+    # Server section
+    def create_server(self, alias=None, address='127.0.0.1', port=0, secret='secret', raddict=DEFAULT_DICT):
+        """Creates Radius Server"""
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind((address, int(port)))
+        #sock.settimeout(3.0)
+        sock.setblocking(0)
+        request = robot.utils.ConnectionCache('No Server Requests Created')
+        response = robot.utils.ConnectionCache('No Server Responses Created')
+        server = {'sock': sock,
+                  'secret': six.b(str(secret)),
+                  'dictionary': dictionary.Dictionary(raddict),
+                  'request':request,
+                  'response':response}
+
+        self._server.register(server, alias=alias)
+        return server
+
+    def receive_request(self,alias,code,timeout):
+        server = self._get_session(self._server, alias)
+        ready = select.select([server['sock']], [], [], float(timeout))
+
+        pkt = None
+        if ready[0]:
+            data, addr = server['sock'].recvfrom(1024)
+            pkt = packet.Packet(secret=server['secret'], packet=data,
+                                    dict=server['dictionary'])
+            server['request'].register(pkt,str(pkt.id))
+
+            self.builtin.log(pkt.code)
+            if pkt.code != code:
+                self.builtin.log('Expected {0}, received {1}'.format(code, pkt.code))
+                raise Exception("received {}".format(pkt.code))
+        if pkt is None:
+            raise Exception("Did not receive any answer")
+        pkt.addr = addr
+        return pkt
+
+    def request_should_contain_attribute(self, key, val=None, alias=None):
+        return self.should_contain_attribute(self._server,key,val,alias)
+
+    def create_response(self, alias, code):
+        """Send Response"""
+        session = self._get_session(self._server,alias)
+        request = session['request'].get_connection(alias)
+        reply = request.CreateReply()
+        reply.code = code
+        session['response'].register(reply,str(reply.code))
+        #todo: deregister request
+        return reply
+
+    def create_access_accept(self, alias=None):
+        """Send Response"""
+        return self.create_response(alias,packet.AccessAccept)
+
+    def create_access_reject(self, alias=None):
+        """Send Response"""
+        return self.create_response(alias,packet.AccessReject)
+
+    def create_accounting_response(self, alias=None):
+        """Send Response"""
+        return self.create_response(alias,packet.AccountingResponse)
+
+    def create_coa_ack(self, alias=None):
+        """Send Response"""
+        return self.create_response(alias,packet.CoaACK)
+
+    def create_coa_nack(self, alias=None):
+        """Send Response"""
+        return self.create_response(alias,packet.CoANAK)
+
+    def add_response_attribute(self, key, value, alias=None):
+        key = str(key)
+        server = self._get_session(self._server,alias)
+        response = server['response'].get_connection(alias)
+        response.AddAttribute(key,value)
+
+    def send_response(self, alias=None):
+        server = self._get_session(self._server, alias)
+        request = server['request'].get_connection(alias)
+        response = server['response'].get_connection(alias)
+        pdu =  response.ReplyPacket()
+        server['sock'].sendto(pdu, request.addr)
+        return request
+
     def receive_accounting_request(self, alias=None, timeout=TIMEOUT):
         """Receives access request"""
         return self.receive_request(alias, packet.AccountingRequest, timeout)
@@ -187,73 +240,31 @@ class RadiusLibrary(object):
         else:
             return cache.get_connection()
 
-    def create_coa_ack(self, alias=None):
-        """Send Response"""
-        session = self._get_session(self._server,alias)
-        request = session['request'].get_connection(alias)
-
-        reply = request.CreateReply()
-        reply.code = packet.CoAACK
-
-        pdu = reply.ReplyPacket()
-        session['response'].register(reply,str(reply.code))
-        #todo: deregister request
-        return reply
-
-    def create_coa_nack(self, alias=None):
-        """Send Response"""
-        session = self._get_session(self._server,alias)
-        request = session['request'].get_connection(alias)
-
-        reply = request.CreateReply()
-        reply.code = packet.CoANAK
-
-        pdu = reply.ReplyPacket()
-        session['response'].register(reply,str(reply.code))
-        #todo: deregister request
-        return reply
-
-    def create_accounting_response(self, alias=None):
-        """Send Response"""
-        session = self._get_session(self._server,alias)
-        request = session['request'].get_connection(alias)
-
-        reply = request.CreateReply()
-        reply.code = packet.AccountingResponse
-
-        pdu = reply.ReplyPacket()
-        session['response'].register(reply,str(reply.code))
-        #todo: deregister request
-        return reply
-
-    def create_access_accept(self, alias=None):
-        """Send Response"""
-        session = self._get_session(self._server,alias)
-        request = session['request'].get_connection(alias)
-
-        reply = request.CreateReply()
-        reply.code = packet.AccessAccept
-        session['response'].register(reply,str(reply.code))
-        #todo: deregister request
-        return reply
-
-    def create_server(self, alias=None, address='127.0.0.1', port=0, secret='secret', raddict=DEFAULT_DICT):
-        """Creates Radius Server"""
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind((address, int(port)))
-        #sock.settimeout(3.0)
-        sock.setblocking(0)
-        request = robot.utils.ConnectionCache('No Server Requests Created')
-        response = robot.utils.ConnectionCache('No Server Responses Created')
-        server = {'sock': sock,
-                  'secret': six.b(str(secret)),
-                  'dictionary': dictionary.Dictionary(raddict),
-                  'request':request,
-                  'response':response}
-
-        self._server.register(server, alias=alias)
-        return server
+#    def create_coa_ack(self, alias=None):
+#        """Send Response"""
+#        session = self._get_session(self._server,alias)
+#        request = session['request'].get_connection(alias)
+#
+#        reply = request.CreateReply()
+#        reply.code = packet.CoAACK
+#
+#        pdu = reply.ReplyPacket()
+#        session['response'].register(reply,str(reply.code))
+#        #todo: deregister request
+#        return reply
+#
+#    def create_coa_nack(self, alias=None):
+#        """Send Response"""
+#        session = self._get_session(self._server,alias)
+#        request = session['request'].get_connection(alias)
+#
+#        reply = request.CreateReply()
+#        reply.code = packet.CoANAK
+#
+#        pdu = reply.ReplyPacket()
+#        session['response'].register(reply,str(reply.code))
+#        #todo: deregister request
+#        return reply
 
     def destroy_server(self,alias):
         session = self._server.switch(alias)
@@ -280,9 +291,3 @@ class RadiusLibrary(object):
                 return
             else:
                 raise BaseException('value "{}" not in {}'.format(val,request[str(key)]))
-
-    def request_should_contain_attribute(self, key, val=None, alias=None):
-        return self.should_contain_attribute(self._server,key,val,alias)
-
-    def response_should_contain_attribute(self, key, val=None, alias=None):
-        return self.should_contain_attribute(self._client,key,val,alias)
