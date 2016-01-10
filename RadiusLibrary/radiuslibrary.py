@@ -88,6 +88,10 @@ class RadiusLibrary(object):
         request = client['request'].get_connection(alias)
         attr_dict_item = request.dict.attributes[key]
 
+        if attr_dict_item.type == 'integer':
+            value = int(value)
+        elif attr_dict_item.type == 'integer':
+            value = str(value)
         if crypt:
             value = request.PwCrypt(value)
         request.AddAttribute(key,value)
@@ -201,7 +205,7 @@ class RadiusLibrary(object):
 
     def create_coa_ack(self, alias=None):
         """Send Response"""
-        return self.create_response(alias,packet.CoaACK)
+        return self.create_response(alias,packet.CoAACK)
 
     def create_coa_nack(self, alias=None):
         """Send Response"""
