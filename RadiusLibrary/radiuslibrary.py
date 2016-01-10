@@ -1,4 +1,17 @@
-"""RobotFramework Radius Module"""
+# Copyright 2016 Michael van Slingerland - Deviousops
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import select
 import socket
 from pyrad import packet, dictionary, tools
@@ -16,15 +29,13 @@ class RadiusLibrary(object):
 
     def __init__(self):
         self._client = robot.utils.ConnectionCache('No Clients Created')
-
         self._server = robot.utils.ConnectionCache('No Servers Created')
-
         self.builtin = BuiltIn()
 
     def create_client(self, alias, address, port,
                       secret, raddict=DEFAULT_DICT,
                       authenticator=True):
-        """ Create Session: create a HTTP session to a server
+        """ Create Client: create a RADIUS session to a server
         `alias` Robot Framework alias to identify the session
         `address` IP address of the RADIUS server
         `port` IP port of the RADIUS server
@@ -182,7 +193,6 @@ class RadiusLibrary(object):
         reply.code = packet.CoAACK
 
         pdu = reply.ReplyPacket()
-        #session['sock'].sendto(pdu, request.addr)
         session['response'].register(reply,str(reply.code))
         #todo: deregister request
         return reply
@@ -196,7 +206,6 @@ class RadiusLibrary(object):
         reply.code = packet.CoANAK
 
         pdu = reply.ReplyPacket()
-        #session['sock'].sendto(pdu, request.addr)
         session['response'].register(reply,str(reply.code))
         #todo: deregister request
         return reply
@@ -210,7 +219,6 @@ class RadiusLibrary(object):
         reply.code = packet.AccountingResponse
 
         pdu = reply.ReplyPacket()
-        session['sock'].sendto(pdu, request.addr)
         session['response'].register(reply,str(reply.code))
         #todo: deregister request
         return reply
@@ -225,31 +233,6 @@ class RadiusLibrary(object):
         session['response'].register(reply,str(reply.code))
         #todo: deregister request
         return reply
-
-    def send_accounting_request(self, alias=None, **attributes):
-        session=self._get_session(self._client, alias)
-
-        pkt = packet.AcctPacket(code=packet.AccountingRequest, secret=session['secret'],
-                                dict=session['dictionary'], **attributes)
-
-        #pkt.authenticator = pkt.CreateAuthenticator()
-        pdu = pkt.RequestPacket()
-
-        session['request'].register(pkt, str(pkt.id))
-        session['sock'].sendto(pdu, (session['address'], session['port']))
-
-        return pkt
-
-    def send_accounting_response(self, alias=None, **attributes):
-        session=self._get_session(self._server, alias)
-
-        pkt = session['request'].get_connection()
-        reply_pkt = pkt.CreateReply(**attributes)
-        reply_pkt.code = packet.AccountingResponse
-        pdu = reply_pkt.ReplyPacket()
-        session['sock'].sendto(pdu, pkt.addr)
-        return reply_pkt
-
 
     def create_server(self, alias=None, address='127.0.0.1', port=0, secret='secret', raddict=DEFAULT_DICT):
         """Creates Radius Server"""

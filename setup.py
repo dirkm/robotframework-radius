@@ -11,6 +11,9 @@ setup(name='robotframework-radius',
       packages     = ['RadiusLibrary'],
       install_requires=[
         "robotframework",
-        "pyrad",
-    ],
+        "pyrad"
+      ],
+      classifiers = [
+        "License :: OSI Approved :: Apache Software License"
+      ]
  )
