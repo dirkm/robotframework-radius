@@ -64,7 +64,7 @@ class RadiusLibrary(object):
         self._client.register(session, alias=alias)
         return session
 
-    def create_request(self, alias, code):
+    def _create_request(self, alias, code):
         client = self._get_session(self._client,alias)
         secret = client['secret']
         dictionary = client['dictionary']
@@ -81,13 +81,22 @@ class RadiusLibrary(object):
         return request
 
     def create_access_request(self,alias=None):
-        return self.create_request(alias,packet.AccessRequest)
+        """ Create Request: create an Access Request
+        `alias` Robot Framework alias to identify the session
+        """
+        return self._create_request(alias,packet.AccessRequest)
 
     def create_accounting_request(self,alias=None):
-        return self.create_request(alias,packet.AccountingRequest)
+        """ Create Request: create an Accounting Request
+        `alias` Robot Framework alias to identify the session
+        """
+        return self._create_request(alias,packet.AccountingRequest)
 
     def create_coa_request(self,alias=None):
-        return self.create_request(alias,packet.CoARequest)
+        """ Create Request: create a CoA Request
+        `alias` Robot Framework alias to identify the session
+        """
+        return self._create_request(alias,packet.CoARequest)
 
     def add_attribute(self, cache, key, value, alias):
         key = str(key)
@@ -107,16 +116,24 @@ class RadiusLibrary(object):
         packet.AddAttribute(key,value)
 
     def add_request_attribute(self, key, value, alias=None):
+        """ Add Request Attribute: Adds RADIUS Attribute to the created request
+        `key` RADIUS attribute identifier, ie User-Name, Acct-Session-Id
+        `value` RADIUS attribute value
+        `alias` Robot Framework alias to identify the session
+        """
         return self.add_attribute(self._client, key, value, alias)
 
     def send_request(self, alias=None):
+        """ Send Request: Send client RADIUS request
+        `alias` Robot Framework alias to identify the session
+        """
         client = self._get_session(self._client,alias)
         request = client['request'].get_connection(alias)
         pdu =  request.RequestPacket()
         client['sock'].sendto(pdu, (client['address'], client['port']))
         return dict(request)
 
-    def receive_response(self,alias,code,timeout):
+    def _receive_response(self,alias,code,timeout):
         client = self._get_session(self._client, alias)
         ready = select.select([client['sock']], [], [], float(timeout))
 
@@ -137,16 +154,39 @@ class RadiusLibrary(object):
         return pkt
 
     def receive_access_accept(self, alias=None, timeout=TIMEOUT):
-        """Receives access accept"""
-        return self.receive_response(alias, packet.AccessAccept, timeout)
+        """ Receive Access Accept: Receive access accept
+        `alias` Robot Framework alias to identify the session
+        `timeout` Set receive timeout in seconds
+        """
+        return self._receive_response(alias, packet.AccessAccept, timeout)
 
     def receive_access_reject(self, alias=None, timeout=TIMEOUT):
-        """Receives access accept"""
-        return self.receive_response(alias, packet.AccessReject, timeout)
+        """ Receive Access Reject: Receive access reject
+        `alias` Robot Framework alias to identify the session
+        `timeout` Set receive timeout in seconds
+        """
+        return self._receive_response(alias, packet.AccessReject, timeout)
 
     def receive_accounting_response(self, alias=None, timeout=TIMEOUT):
-        """Receives access accept"""
-        return self.receive_response(alias, packet.AccountingResponse, timeout)
+        """ Receive Accounting Response: Receive accounting response
+        `alias` Robot Framework alias to identify the session
+        `timeout` Set receive timeout in seconds
+        """
+        return self._receive_response(alias, packet.AccountingResponse, timeout)
+
+    def receive_coa_ack(self, alias=None, timeout=TIMEOUT):
+        """ Receive CoA Ack: Receive CoA ack
+        `alias` Robot Framework alias to identify the session
+        `timeout` Set receive timeout in seconds
+        """
+        return self._receive_request(alias, packet.CoARequest, timeout)
+
+    def receive_coa_nack(self, alias=None, timeout=TIMEOUT):
+        """ Receive CoA Nack: Receive CoA nack
+        `alias` Robot Framework alias to identify the session
+        `timeout` Set receive timeout in seconds
+        """
+        return self._receive_request(alias, packet.CoARequest, timeout)
 
     def response_should_contain_attribute(self, key, val=None, alias=None):
         return self.should_contain_attribute(self._client,key,val,alias)
@@ -171,7 +211,7 @@ class RadiusLibrary(object):
         self._server.register(server, alias=alias)
         return server
 
-    def receive_request(self,alias,code,timeout):
+    def _receive_request(self,alias,code,timeout):
         server = self._get_session(self._server, alias)
         ready = select.select([server['sock']], [], [], float(timeout))
 
@@ -194,8 +234,7 @@ class RadiusLibrary(object):
     def request_should_contain_attribute(self, key, val=None, alias=None):
         return self.should_contain_attribute(self._server,key,val,alias)
 
-    def create_response(self, alias, code):
-        """Send Response"""
+    def _create_response(self, alias, code):
         session = self._get_session(self._server,alias)
         request = session['request'].get_connection(alias)
         reply = request.CreateReply()
@@ -205,29 +244,48 @@ class RadiusLibrary(object):
         return reply
 
     def create_access_accept(self, alias=None):
-        """Send Response"""
-        return self.create_response(alias,packet.AccessAccept)
+        """ Create Access Accept: create an Access Accept
+        `alias` Robot Framework alias to identify the session
+        """
+        return self._create_response(alias,packet.AccessAccept)
 
     def create_access_reject(self, alias=None):
-        """Send Response"""
-        return self.create_response(alias,packet.AccessReject)
+        """ Create Access Reject: create an Access Reject
+        `alias` Robot Framework alias to identify the session
+        """
+        return self._create_response(alias,packet.AccessReject)
 
     def create_accounting_response(self, alias=None):
-        """Send Response"""
-        return self.create_response(alias,packet.AccountingResponse)
+        """ Create Accounting Response: create an Accounting Response
+        `alias` Robot Framework alias to identify the session
+        """
+        return self._create_response(alias,packet.AccountingResponse)
 
     def create_coa_ack(self, alias=None):
+        """ Create CoA Ack: create a CoA Ack
+        `alias` Robot Framework alias to identify the session
+        """
         """Send Response"""
-        return self.create_response(alias,packet.CoAACK)
+        return self._create_response(alias,packet.CoAACK)
 
     def create_coa_nack(self, alias=None):
-        """Send Response"""
-        return self.create_response(alias,packet.CoANAK)
+        """ Create CoA Nack: create a CoA Nack
+        `alias` Robot Framework alias to identify the session
+        """
+        return self._create_response(alias,packet.CoANAK)
 
     def add_response_attribute(self, key, value, alias=None):
+        """ Add Response Attribute: Adds RADIUS Attribute to the created response
+        `key` RADIUS attribute identifier, ie Framed-IP-Address
+        `value` RADIUS attribute value
+        `alias` Robot Framework alias to identify the session
+        """
         return self.add_attribute(self._server, key, value, alias)
 
     def send_response(self, alias=None):
+        """ Send Response: Send client RADIUS response
+        `alias` Robot Framework alias to identify the session
+        """
         server = self._get_session(self._server, alias)
         request = server['request'].get_connection(alias)
         response = server['response'].get_connection(alias)
@@ -236,16 +294,25 @@ class RadiusLibrary(object):
         return request
 
     def receive_accounting_request(self, alias=None, timeout=TIMEOUT):
-        """Receives access request"""
-        return self.receive_request(alias, packet.AccountingRequest, timeout)
+        """ Receive Accounting Request: Receive accounting request
+        `alias` Robot Framework alias to identify the session
+        `timeout` Set receive timeout in seconds
+        """
+        return self._receive_request(alias, packet.AccountingRequest, timeout)
 
     def receive_coa_request(self, alias=None, timeout=TIMEOUT):
-        """Receives access request"""
-        return self.receive_request(alias, packet.CoARequest, timeout)
+        """ Receive CoA Request: Receive CoA request
+        `alias` Robot Framework alias to identify the session
+        `timeout` Set receive timeout in seconds
+        """
+        return self._receive_request(alias, packet.CoARequest, timeout)
 
     def receive_access_request(self, alias=None, timeout=TIMEOUT):
-        """Receives access request"""
-        return self.receive_request(alias, packet.AccessRequest, timeout)
+        """ Receive Access Request: Receive access request
+        `alias` Robot Framework alias to identify the session
+        `timeout` Set receive timeout in seconds
+        """
+        return self._receive_request(alias, packet.AccessRequest, timeout)
 
     def _get_session(self, cache, alias):
         # Switch to related client alias
