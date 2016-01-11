@@ -108,7 +108,8 @@ class RadiusLibrary(object):
         attr_dict_item = packet.dict.attributes[key]
 
         if attr_dict_item.type == 'integer':
-            value = int(value)
+            if attr_dict_item.values.HasForward(value) == False:
+              value = int(value)
         elif attr_dict_item.type == 'string':
             value = str(value)
         if attr_dict_item.encrypt == 1:

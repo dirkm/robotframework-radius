@@ -43,6 +43,13 @@ class Client(unittest.TestCase):
         self.radius.add_request_attribute(u'Session-Timeout',u'1')
         self.assertEqual(req['Session-Timeout'],[1])
 
+    def test_add_request_attributes_type_integer_value_id(self):
+        req = self.radius.create_accounting_request()
+        self.radius.add_request_attribute(u'Acct-Status-Type',u'Start')
+        self.radius.add_request_attribute(u'Acct-Status-Type',u'1')
+        self.radius.add_request_attribute(u'Acct-Status-Type',1)
+        self.assertEqual(req['Acct-Status-Type'],['Start','Start','Start'])
+
     def test_add_request_attributes_type_octets(self):
         req = self.radius.create_access_request()
         self.radius.add_request_attribute(u'Class',u'\x56xx')
