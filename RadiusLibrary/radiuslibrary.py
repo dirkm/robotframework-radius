@@ -100,6 +100,8 @@ class RadiusLibrary(object):
 
     def add_attribute(self, cache, key, value, alias):
         key = str(key)
+        if isinstance(value, unicode):
+            value = str(value)
         client = self._get_session(cache,alias)
         if cache == self._client:
           packet = client['request'].get_connection(alias)
