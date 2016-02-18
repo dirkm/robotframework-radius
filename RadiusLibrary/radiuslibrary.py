@@ -324,7 +324,7 @@ class RadiusLibrary(object):
         else:
             return cache.get_connection()
 
-    def should_contain_attribute(self,cache,key,val,alias):
+    def should_contain_attribute(self, cache, key, val, alias):
         session=self._get_session(cache, alias)
         request = None
         if cache == self._client:
