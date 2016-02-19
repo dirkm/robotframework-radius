@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name='robotframework-radius',
-      version='0.1.0',
+      version='0.1.1',
       description='Robotframework RADIUS library',
       author='Michael van Slingerland',
       author_email='michael@deviousops.nl',
