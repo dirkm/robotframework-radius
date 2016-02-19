@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 from setuptools import setup
 
-
 setup(name='robotframework-radius',
-      version='0.1.0',
+      version='0.1.1',
       description='Robotframework RADIUS library',
       author='Michael van Slingerland',
       author_email='michael@deviousops.nl',
@@ -11,6 +10,9 @@ setup(name='robotframework-radius',
       packages     = ['RadiusLibrary'],
       install_requires=[
         "robotframework",
-        "pyrad",
-    ],
+        "pyrad"
+      ],
+      classifiers = [
+        "License :: OSI Approved :: Apache Software License"
+      ]
  )
