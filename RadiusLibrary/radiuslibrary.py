@@ -62,7 +62,6 @@ class RadiusLibrary(object):
     | `Create Access Accept` |
     | `Add Request Attribute`  | Framed-IP-Address | 10.0.0.100 |
     | `Send Response` |
-
     """
 
     ROBOT_LIBRARY_SCOPE = 'TEST CASE'
