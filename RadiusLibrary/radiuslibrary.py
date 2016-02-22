@@ -20,13 +20,50 @@ from robot.libraries.BuiltIn import BuiltIn
 from pyrad import packet, dictionary, tools
 
 # Default receive timeout
-TIMEOUT = 15.0
+TIMEOUT = 10.0
 
 # Default Radius dictionary file
 DEFAULT_DICT = 'dictionary'
 
 class RadiusLibrary(object):
-    """Main Class"""
+    """``RadiusLibrary`` is a test library providing keywords for handling the RADIUS protocol.
+    This library uses the pyrad package for RADIUS protocol handling.
+    Pyrad source code is located at https://github.com/wichert/pyrad. The library supports the creation of RADIUS clients and servers, and supports authentication, accounting and change of authorization requests.
+    Multiple client and server sessions can be create through the use the `alias` parameter.
+    = Examples =
+    == Client ==
+    Example of client authentication session:
+    | `Create Client`         | server=127.0.0.1 | port=1812 | secret=mysecret |
+    | `Create Access Request` |
+    | `Add Request Attribute` | User-Name         | subscriber       |
+    | `Add Request Attribute` | User-Password     | mypass           |
+    | `Add Request Attribute` | Acct-Session-Id   | someid           |
+    | `Send Request` |
+    | `Receive Access Accept` | timeout=5.0 |
+    | `Response Should Contain Attribute` | Framed-IP-Address | 10.0.0.100 |
+
+    Example of client accounting session:
+    | `Create Client` | server=127.0.0.1 | port=1813 | secret=mysecret |
+    | `Create Access Request` |
+    | `Create Accounting Request` |
+    | `Add Request Attribute` | User-Name         | subscriber       |
+    | `Add Request Attribute` | Acct-Session-Id   | someid           |
+    | `Add Request Attribute` | Acct-Status-Type  | Start            |
+    | `Send Request` |
+    | `Receive Accounting Response` |
+
+    == Server ==
+    Example of server session:
+    | `Create Server`          | server=127.0.0.1 | port=1812 | secret=mysecret |
+    | `Receive Access Request` |
+    | `Request Should Contain Attribute` | User-Name | subscriber |
+    | `Request Should Contain Attribute` | User-Password | mypass |
+    | `Request Should Contain Attribute` | Acct-Session-Id |
+    | `Create Access Accept` |
+    | `Add Request Attribute`  | Framed-IP-Address | 10.0.0.100 |
+    | `Send Response` |
+
+    """
 
     ROBOT_LIBRARY_SCOPE = 'TEST CASE'
 
@@ -38,13 +75,28 @@ class RadiusLibrary(object):
     def create_client(self, alias, address, port,
                       secret, raddict=DEFAULT_DICT,
                       authenticator=True):
-        """ Create Client: create a RADIUS session to a server
-        `alias` Robot Framework alias to identify the session
-        `address` IP address of the RADIUS server
-        `port` IP port of the RADIUS server
-        `secret` RADIUS secret
-        `raddict` Path to RADIUS dictionary
-        `authenticator` set to True to enable authenticator
+        """ Create Client: create a RADIUS session to a server.
+
+        - ``alias:`` Alias to identify the session to use.
+
+        - ``address:`` IP address of the RADIUS server.
+
+        - ``port:`` IP port of the RADIUS server.
+
+        - ``secret:`` RADIUS secret.
+
+        - ``raddict:`` Path to RADIUS dictionary.
+
+        - ``authenticator:`` Authenticator boolean switch.
+
+        Examples:
+        | Create Client | auth_client | 127.0.0.1 | 1812 | mysecret |                     |
+        | Create Client | acct_client | 127.0.0.1 | 1813 | mysecret | dictionary=mydict   |
+        | Create Client |  coa_client | 127.0.0.1 | 3799 | mysecret | authenticator=False |
+
+        The next step after creating a client is to create a request, using the `Create Access Request` keyword for example.
+        After creating a client, it is ready to send requests using the `Receive Access Request` keyword for example.
+
         """
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(('', 0))
@@ -81,24 +133,30 @@ class RadiusLibrary(object):
         return request
 
     def create_access_request(self,alias=None):
-        """ Create Request: create an Access Request
-        `alias` Robot Framework alias to identify the session
+        """ Creates an access request.
+
+        - ``alias:`` alias to identify the session to use.
+
         """
         return self._create_request(alias,packet.AccessRequest)
 
     def create_accounting_request(self,alias=None):
-        """ Create Request: create an Accounting Request
-        `alias` Robot Framework alias to identify the session
+        """ Creates an accounting request.
+
+        - ``alias:`` alias to identify the session to use.
+
         """
         return self._create_request(alias,packet.AccountingRequest)
 
     def create_coa_request(self,alias=None):
-        """ Create Request: create a CoA Request
-        `alias` Robot Framework alias to identify the session
+        """ Creates an coa request.
+
+        - ``alias:`` alias to identify the session to use.
+
         """
         return self._create_request(alias,packet.CoARequest)
 
-    def add_attribute(self, cache, key, value, alias):
+    def _add_attribute(self, cache, key, value, alias):
         key = str(key)
         if isinstance(value, unicode):
             value = str(value)
@@ -119,16 +177,22 @@ class RadiusLibrary(object):
         packet.AddAttribute(key,value)
 
     def add_request_attribute(self, key, value, alias=None):
-        """ Add Request Attribute: Adds RADIUS Attribute to the created request
-        `key` RADIUS attribute identifier, ie User-Name, Acct-Session-Id
-        `value` RADIUS attribute value
-        `alias` Robot Framework alias to identify the session
+        """Adds attribute to the created RADIUS request.
+
+        - ``key:``   RADIUS attribute identifier, ie User-Name, Acct-Session-Id.
+        - ``value:`` RADIUS attribute value.
+        - ``alias:`` alias to identify the client session to use.
+
         """
-        return self.add_attribute(self._client, key, value, alias)
+        return self._add_attribute(self._client, key, value, alias)
 
     def send_request(self, alias=None):
-        """ Send Request: Send client RADIUS request
-        `alias` Robot Framework alias to identify the session
+        """Sends RADIUS client request using session specified by `alias`.
+
+        - ``key:``   RADIUS attribute identifier, ie User-Name, Acct-Session-Id.
+        - ``value:`` RADIUS attribute value.
+        - ``alias:`` alias to identify the client session to use.
+
         """
         client = self._get_session(self._client,alias)
         request = client['request'].get_connection(alias)
@@ -149,6 +213,7 @@ class RadiusLibrary(object):
 
             self.builtin.log(pkt.keys())
             if pkt.code != code:
+                # TODO: name packet code instead of id.
                 self.builtin.log('Expected {0}, received {1}'.format(code, pkt.code))
                 raise Exception("received {}".format(pkt.code))
         if pkt is None:
@@ -157,47 +222,85 @@ class RadiusLibrary(object):
         return pkt
 
     def receive_access_accept(self, alias=None, timeout=TIMEOUT):
-        """ Receive Access Accept: Receive access accept
-        `alias` Robot Framework alias to identify the session
-        `timeout` Set receive timeout in seconds
+        """ Receives an access accept.
+
+        - ``alias:`` alias to identify the session to use.
+        - ``timeout:`` Sets receive timeout in seconds(float).
+
         """
         return self._receive_response(alias, packet.AccessAccept, timeout)
 
     def receive_access_reject(self, alias=None, timeout=TIMEOUT):
-        """ Receive Access Reject: Receive access reject
-        `alias` Robot Framework alias to identify the session
-        `timeout` Set receive timeout in seconds
+        """ Receives an access reject.
+
+        - ``alias:`` alias to identify the session to use.
+        - ``timeout:`` Sets receive timeout in seconds(float).
+
         """
         return self._receive_response(alias, packet.AccessReject, timeout)
 
     def receive_accounting_response(self, alias=None, timeout=TIMEOUT):
-        """ Receive Accounting Response: Receive accounting response
-        `alias` Robot Framework alias to identify the session
-        `timeout` Set receive timeout in seconds
+        """ Receives an accounting response.
+
+        - ``alias:`` alias to identify the session to use.
+        - ``timeout:`` Sets receive timeout in seconds(float).
+
         """
         return self._receive_response(alias, packet.AccountingResponse, timeout)
 
     def receive_coa_ack(self, alias=None, timeout=TIMEOUT):
-        """ Receive CoA Ack: Receive CoA ack
-        `alias` Robot Framework alias to identify the session
-        `timeout` Set receive timeout in seconds
+        """ Receives a coa ack response.
+
+        - ``alias:`` alias to identify the session to use.
+        - ``timeout:`` Sets receive timeout in seconds(float).
+
         """
         return self._receive_request(alias, packet.CoARequest, timeout)
 
     def receive_coa_nack(self, alias=None, timeout=TIMEOUT):
-        """ Receive CoA Nack: Receive CoA nack
-        `alias` Robot Framework alias to identify the session
-        `timeout` Set receive timeout in seconds
+        """ Receives a coa nack response.
+
+        - ``alias:`` alias to identify the session to use.
+        - ``timeout:`` Sets receive timeout in seconds(float).
+
         """
         return self._receive_request(alias, packet.CoARequest, timeout)
 
     def response_should_contain_attribute(self, key, val=None, alias=None):
-        return self.should_contain_attribute(self._client,key,val,alias)
+        """ Checks RADIUS response  if specified `key`, or `key value` exists.
+
+        If not, An error will be raised.
+
+        - ``key:``   RADIUS attribute identifier, ie Framed-IP-Address.
+        - ``value:`` RADIUS attribute value.
+        - ``key:`` Alias to identify the servr session to use.
+
+        """
+        return self._should_contain_attribute(self._client,key,val,alias)
 
 
     # Server section
     def create_server(self, alias=None, address='127.0.0.1', port=0, secret='secret', raddict=DEFAULT_DICT):
-        """Creates Radius Server"""
+        """ Creates a RADIUS server.
+
+        - ``alias:`` Alias to identify the servr session to use.
+
+        - ``address:`` IP address of the RADIUS server.
+
+        - ``port:`` IP port of the RADIUS server.
+
+        - ``secret:`` RADIUS secret.
+
+        - ``raddict:`` Path to RADIUS dictionary.
+
+        Examples:
+        | Create Server | auth_server | 127.0.0.1 | 1812 | mysecret |                     |
+        | Create Server | acct_server | 127.0.0.1 | 1813 | mysecret | dictionary=mydict   |
+        | Create Server |  coa_server | 127.0.0.1 | 3799 | mysecret |                     |
+
+        After creating a server it is ready to receive requests using the `Receive Access Request` keyword for example.
+
+        """
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((address, int(port)))
@@ -235,7 +338,16 @@ class RadiusLibrary(object):
         return pkt
 
     def request_should_contain_attribute(self, key, val=None, alias=None):
-        return self.should_contain_attribute(self._server,key,val,alias)
+        """ Checks RADIUS request if specified `key`, or `key value` exists.
+
+        If not, An error will be raised.
+
+        - ``key:``   RADIUS attribute identifier, ie Framed-IP-Address.
+        - ``value:`` RADIUS attribute value.
+        - ``key:`` Alias to identify the servr session to use.
+
+        """
+        return self._should_contain_attribute(self._server,key,val,alias)
 
     def _create_response(self, alias, code):
         session = self._get_session(self._server,alias)
@@ -247,47 +359,60 @@ class RadiusLibrary(object):
         return reply
 
     def create_access_accept(self, alias=None):
-        """ Create Access Accept: create an Access Accept
-        `alias` Robot Framework alias to identify the session
+        """ Creates an access accept response.
+
+        - ``alias:`` alias to identify the session to use.
+
         """
         return self._create_response(alias,packet.AccessAccept)
 
     def create_access_reject(self, alias=None):
-        """ Create Access Reject: create an Access Reject
-        `alias` Robot Framework alias to identify the session
+        """ Creates an access accept.
+
+        - ``alias:`` alias to identify the session to use.
+
         """
         return self._create_response(alias,packet.AccessReject)
 
     def create_accounting_response(self, alias=None):
-        """ Create Accounting Response: create an Accounting Response
-        `alias` Robot Framework alias to identify the session
+        """ Creates an accounting response.
+
+        - ``alias:`` alias to identify the session to use.
+
         """
         return self._create_response(alias,packet.AccountingResponse)
 
     def create_coa_ack(self, alias=None):
-        """ Create CoA Ack: create a CoA Ack
-        `alias` Robot Framework alias to identify the session
+        """ Creates a coa ack response.
+
+        - ``alias:`` alias to identify the session to use.
+
         """
-        """Send Response"""
         return self._create_response(alias,packet.CoAACK)
 
     def create_coa_nack(self, alias=None):
-        """ Create CoA Nack: create a CoA Nack
-        `alias` Robot Framework alias to identify the session
+        """ Creates a coa nack response.
+
+        - ``alias:`` alias to identify the session to use.
+
         """
         return self._create_response(alias,packet.CoANAK)
 
     def add_response_attribute(self, key, value, alias=None):
-        """ Add Response Attribute: Adds RADIUS Attribute to the created response
-        `key` RADIUS attribute identifier, ie Framed-IP-Address
-        `value` RADIUS attribute value
-        `alias` Robot Framework alias to identify the session
+        """Adds attribute to the created RADIUS response.
+
+        - ``key:``   RADIUS attribute identifier, ie User-Name, Acct-Session-Id.
+        - ``value:`` RADIUS attribute value.
+        - ``alias:`` alias to identify the client session to use.
+
         """
-        return self.add_attribute(self._server, key, value, alias)
+        return self._add_attribute(self._server, key, value, alias)
 
     def send_response(self, alias=None):
-        """ Send Response: Send client RADIUS response
-        `alias` Robot Framework alias to identify the session
+        """Sends RADIUS server resoponse using session specified by `alias`.
+
+        - ``alias:`` alias to identify the client session to use.
+
         """
         server = self._get_session(self._server, alias)
         request = server['request'].get_connection(alias)
@@ -297,23 +422,29 @@ class RadiusLibrary(object):
         return request
 
     def receive_accounting_request(self, alias=None, timeout=TIMEOUT):
-        """ Receive Accounting Request: Receive accounting request
-        `alias` Robot Framework alias to identify the session
-        `timeout` Set receive timeout in seconds
+        """ Receives an accounting request.
+
+        - ``alias:`` alias to identify the session to use.
+        - ``timeout:`` Sets receive timeout in seconds(float).
+
         """
         return self._receive_request(alias, packet.AccountingRequest, timeout)
 
     def receive_coa_request(self, alias=None, timeout=TIMEOUT):
-        """ Receive CoA Request: Receive CoA request
-        `alias` Robot Framework alias to identify the session
-        `timeout` Set receive timeout in seconds
+        """ Receives a coa request.
+
+        - ``alias:`` alias to identify the session to use.
+        - ``timeout:`` Sets receive timeout in seconds(float).
+
         """
         return self._receive_request(alias, packet.CoARequest, timeout)
 
     def receive_access_request(self, alias=None, timeout=TIMEOUT):
-        """ Receive Access Request: Receive access request
-        `alias` Robot Framework alias to identify the session
-        `timeout` Set receive timeout in seconds
+        """ Receives an access request.
+
+        - ``alias:`` alias to identify the session to use.
+        - ``timeout:`` Sets receive timeout in seconds(float).
+
         """
         return self._receive_request(alias, packet.AccessRequest, timeout)
 
@@ -324,7 +455,7 @@ class RadiusLibrary(object):
         else:
             return cache.get_connection()
 
-    def should_contain_attribute(self, cache, key, val, alias):
+    def _should_contain_attribute(self, cache, key, val, alias):
         session=self._get_session(cache, alias)
         request = None
         if cache == self._client:
