@@ -6,4 +6,4 @@ This library uses the pyrad package for RADIUS protocol handling.
 Pyrad source code is located at https://github.com/wichert/pyrad.
 The library supports the creation of RADIUS clients and servers, and supports authentication, accounting and change of authorization requests.
 
-For more information see `doc/keywords.html`
+For more information see `doc/RadiusLibrary.html`
