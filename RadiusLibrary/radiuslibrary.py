@@ -28,7 +28,7 @@ DEFAULT_DICT = 'dictionary'
 class RadiusLibrary(object):
     """``RadiusLibrary`` is a test library providing keywords for handling the RADIUS protocol.
     This library uses the pyrad package for RADIUS protocol handling.
-    Pyrad source code is located at https://github.com/wichert/pyrad. The library supports the creation of RADIUS clients and servers, and can handle authentication, accounting and change of authorization requests.
+    Pyrad source code is located at https://github.com/wichert/pyrad. The library supports the creation of RADIUS clients and servers, and supports authentication, accounting and change of authorization requests.
     Multiple client and server sessions can be create through the use the `alias` parameter.
     = Examples =
     == Client ==
