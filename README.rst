@@ -2,7 +2,8 @@
 RadiusLibrary
 ****************************************
 
-|BuildStatus|_
+.. image:: https://travis-ci.org/deviousops/robotframework-radius.svg?branch=master
+    :target: https://travis-ci.org/deviousops/robotframework-radius
 
 `RadiusLibrary` is a test library providing keywords for handling the RADIUS protocol.
 This library uses the pyrad package for RADIUS protocol handling.
