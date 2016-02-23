@@ -1,6 +1,9 @@
 ****************************************
 RadiusLibrary
 ****************************************
+
+|BuildStatus|_
+
 `RadiusLibrary` is a test library providing keywords for handling the RADIUS protocol.
 This library uses the pyrad package for RADIUS protocol handling.
 Pyrad source code is located at https://github.com/wichert/pyrad.
