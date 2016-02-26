@@ -58,7 +58,7 @@ For more info, have a look at the keyword documentation: https://rawgit.com/devi
 
 Usage
 -----
-Save the example above to `auth.robot`
+Save the example above to `auth.robot`, execute the following commands.
 
 .. code:: shell
 
