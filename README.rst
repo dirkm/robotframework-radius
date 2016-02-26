@@ -15,6 +15,7 @@ Installation
 Using the PIP installer
 
 .. code:: shell
+
     $ pip install robotframework-radius
 
 Or after cloning this repository
@@ -60,12 +61,13 @@ Usage
 Save the example above to `auth.robot`
 
 .. code:: shell
-    export RADIUS_SERVER=127.0.0.1
-    export RADIUS_AUTH_PORT=1812
-    export RADIUS_ACCT_PORT=1813
-    export RADIUS_SECRET=secret
-    export RADIUS_DICTIONARY=/usr/share/freeradius/dictionary.rfc2865
-    robot auth.robot
+
+    $ export RADIUS_SERVER=127.0.0.1
+    $ export RADIUS_AUTH_PORT=1812
+    $ export RADIUS_ACCT_PORT=1813
+    $ export RADIUS_SECRET=secret
+    $ export RADIUS_DICTIONARY=/usr/share/freeradius/dictionary.rfc2865
+    $ robot auth.robot
 
 Links
 -----
