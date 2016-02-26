@@ -10,11 +10,21 @@ Introduction
 `RadiusLibrary` is a test library for Robot Framework, providing keywords for handling the RADIUS protocol.
 The library supports the creation of RADIUS clients and servers, and supports authentication, accounting and change of authorization requests.
 
-Usage
------
+Installation
+------------
+Using the PIP installer
+
+.. code:: shell
+    $ pip install robotframework-radius
+
+Or after cloning this repository
+
+.. code:: shell
+    $ python setup.py install
+
+Example
+-------
 .. code:: robotframework
-
-
 
     *** Settings ***
     Library     RadiusLibrary
@@ -42,7 +52,19 @@ Usage
         Receive Access Reject
         Response Should Contain Attribute    Reply-Message    authentication failed
 
-For more information see https://rawgit.com/deviousops/robotframework-radius/master/doc/RadiusLibrary.html.
+For more info, have a look at the keyword documentation: https://rawgit.com/deviousops/robotframework-radius/master/doc/RadiusLibrary.html.
+
+Usage
+-----
+Save the example above to `auth.robot`
+
+.. code:: shell
+    export RADIUS_SERVER=127.0.0.1
+    export RADIUS_AUTH_PORT=1812
+    export RADIUS_ACCT_PORT=1813
+    export RADIUS_SECRET=secret
+    export RADIUS_DICTIONARY=/usr/share/freeradius/dictionary.rfc2865
+    robot auth.robot
 
 Links
 -----
