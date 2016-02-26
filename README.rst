@@ -26,7 +26,9 @@ Or after cloning this repository
 
 Example
 -------
+
 .. code:: robotframework
+
     *** Settings ***
     Library           RadiusLibrary
 
