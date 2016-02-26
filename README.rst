@@ -20,6 +20,7 @@ Using the PIP installer
 Or after cloning this repository
 
 .. code:: shell
+
     $ python setup.py install
 
 Example
