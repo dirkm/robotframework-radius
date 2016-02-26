@@ -27,9 +27,8 @@ Or after cloning this repository
 Example
 -------
 .. code:: robotframework
-
     *** Settings ***
-    Library     RadiusLibrary
+    Library           RadiusLibrary
 
     *** Test Cases ***
     Should Receive Access Accept
@@ -37,8 +36,8 @@ Example
         Create Access Request
         Add Request attribute    User-Name    user
         Add Request attribute    User-Password    x
-        Add Request attribute    Acct-Session-Id  1234
-        Add Request attribute    NAS-IP-Address  127.0.1.1
+        Add Request attribute    Acct-Session-Id    1234
+        Add Request attribute    NAS-IP-Address    127.0.1.1
         Send Request
         Receive Access Accept
         Response Should Contain Attribute    Framed-IP-Address    10.0.0.100
@@ -49,7 +48,7 @@ Example
         Create Access Request
         Add Request attribute    User-Name    user
         Add Request attribute    User-Password    wrong
-        Add Request attribute    Acct-Session-Id  126
+        Add Request attribute    Acct-Session-Id    126
         Send Request
         Receive Access Reject
         Response Should Contain Attribute    Reply-Message    authentication failed
