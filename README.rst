@@ -34,7 +34,7 @@ Example
 
     *** Test Cases ***
     Should Receive Access Accept
-        Create Client    auth    %{RADIUS_SERVER}    %{RADIUS_AUTH_PORT}    %{RADIUS_SECRET}    %{RADIUS_DICTIONARY}
+        Create Client    auth    %{SERVER}    %{AUTHPORT}    %{SECRET}    %{DICTIONARY}
         Create Access Request
         Add Request attribute    User-Name    user
         Add Request attribute    User-Password    x
@@ -46,7 +46,7 @@ Example
         Response Should Contain Attribute    Class    premium
 
     Wrong Password Should Receive Access Reject
-        Create Client    auth    %{RADIUS_SERVER}    %{RADIUS_AUTH_PORT}    %{RADIUS_SECRET}    %{RADIUS_DICTIONARY}
+        Create Client    auth    %{SERVER}    %{AUTHPORT}    %{SECRET}    %{DICTIONARY}
         Create Access Request
         Add Request attribute    User-Name    user
         Add Request attribute    User-Password    wrong
@@ -63,11 +63,10 @@ Save the example above to `auth.robot`, execute the following commands.
 
 .. code:: shell
 
-    $ export RADIUS_SERVER=127.0.0.1
-    $ export RADIUS_AUTH_PORT=1812
-    $ export RADIUS_ACCT_PORT=1813
-    $ export RADIUS_SECRET=secret
-    $ export RADIUS_DICTIONARY=/usr/share/freeradius/dictionary.rfc2865
+    $ export SERVER=127.0.0.1
+    $ export AUTHPORT=1812
+    $ export SECRET=secret
+    $ export DICTIONARY=/usr/share/freeradius/dictionary.rfc2865
     $ robot auth.robot
 
 Links
