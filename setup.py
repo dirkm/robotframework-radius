@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from setuptools import setup
 
-VERSION = '0.2.3'
+VERSION = '0.3.1'
 setup(name='robotframework-radius',
       version=VERSION,
       description='Robotframework RADIUS library',
