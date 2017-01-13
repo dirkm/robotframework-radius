@@ -124,7 +124,7 @@ class RadiusLibrary(object):
           request = packet.AuthPacket(code=code, secret=secret,
                                       dict=dictionary)
 
-        elif code in [packet.AccountingRequest, packet.CoARequest]:
+        elif code in [packet.AccountingRequest, packet.CoARequest, packet.DisconnectRequest]:
           request = packet.AcctPacket(code=code, secret=secret,
                                       dict=dictionary)
 
@@ -154,6 +154,14 @@ class RadiusLibrary(object):
 
         """
         return self._create_request(alias,packet.CoARequest)
+
+    def create_disconnect_request(self,alias=None):
+        """ Creates a disconnect request.
+
+        - ``alias:`` alias to identify the session to use.
+
+        """
+        return self._create_request(alias,packet.DisconnectRequest)
 
     def _add_attribute(self, cache, key, value, alias):
         key = str(key)
@@ -397,6 +405,21 @@ class RadiusLibrary(object):
         """
         return self._create_response(alias,packet.CoANAK)
 
+    def create_disconnect_ack(self, alias=None):
+        """ Creates a disconnect ack response.
+
+        - ``alias:`` alias to identify the session to use.
+
+        """
+        return self._create_response(alias,packet.DisconnectACK)
+
+    def create_disconnect_nack(self, alias=None):
+        """ Creates a disconnect nack response.
+
+        - ``alias:`` alias to identify the session to use.
+
+        """
+        return self._create_response(alias,packet.DisconnectNAK)
     def add_response_attribute(self, key, value, alias=None):
         """Adds attribute to the created RADIUS response.
 
@@ -437,6 +460,15 @@ class RadiusLibrary(object):
 
         """
         return self._receive_request(alias, packet.CoARequest, timeout)
+
+    def receive_disconnect_request(self, alias=None, timeout=TIMEOUT):
+        """ Receives a disconnect request.
+
+        - ``alias:`` alias to identify the session to use.
+        - ``timeout:`` Sets receive timeout in seconds(float).
+
+        """
+        return self._receive_request(alias, packet.DisconnectRequest, timeout)
 
     def receive_access_request(self, alias=None, timeout=TIMEOUT):
         """ Receives an access request.

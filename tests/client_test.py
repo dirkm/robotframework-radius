@@ -25,7 +25,8 @@ class Client(unittest.TestCase):
     def test_create_request(self):
         for req_type in [('access',pyrad.packet.AccessRequest),
                         ('accounting',pyrad.packet.AccountingRequest),
-                        ('coa',pyrad.packet.CoARequest)]:
+                        ('coa',pyrad.packet.CoARequest),
+                        ('disconnect',pyrad.packet.DisconnectRequest)]:
             req = getattr(self.radius,'create_{}_request'.format(req_type[0]))()
             self.assertEqual(req.code, req_type[1])
             self.assertEqual(req.authenticator,None)
