@@ -72,8 +72,10 @@ class RadiusLibrary(object):
         self.builtin = BuiltIn()
 
     def create_client(self, alias, address, port,
-                      secret, raddict=DEFAULT_DICT,
-                      authenticator=True):
+                      secret,
+                      raddicts=[DEFAULT_DICT],
+                      authenticator=True
+                      ):
         """ Create Client: create a RADIUS session to a server.
 
         - ``alias:`` Alias to identify the session to use.
@@ -84,7 +86,7 @@ class RadiusLibrary(object):
 
         - ``secret:`` RADIUS secret.
 
-        - ``raddict:`` Path to RADIUS dictionary.
+        - ``raddicts:`` Path to list of RADIUS dictionaries.
 
         - ``authenticator:`` Authenticator boolean switch.
 
@@ -107,7 +109,7 @@ class RadiusLibrary(object):
                    'address': str(address),
                    'port': int(port),
                    'secret': six.b(str(secret)),
-                   'dictionary': dictionary.Dictionary(raddict),
+                   'dictionary': dictionary.Dictionary(*raddicts),
                    'authenticator': authenticator,
                    'request': request,
                    'response': response}
@@ -165,7 +167,7 @@ class RadiusLibrary(object):
 
     def _add_attribute(self, cache, key, value, alias):
         key = str(key)
-        if isinstance(value, unicode):
+        if isinstance(value, str):
             value = str(value)
         client = self._get_session(cache,alias)
         if cache == self._client:
